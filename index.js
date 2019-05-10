@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const app = express();
-const { handleDBConnect } = require('./db');
+const { connect, disconnect, query } = require('./db');
 
 handleDBConnect();
 

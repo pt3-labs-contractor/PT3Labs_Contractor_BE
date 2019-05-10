@@ -1,17 +1,29 @@
 const { Client } = require('pg');
 
 module.exports = {
-    handleDBConnect,
+    connect,
+    disconnect,
+    select,
 }
 
-async function handleDBConnect(){
+const client = new Client();
+
+async function connect(){
     try {
-        const client = new Client();
         await client.connect();
-        const res = await client.query('SELECT $1::text as message', ['Hello World']);
-        console.log(res.rows[0].message);
+    } catch(err) {
+        console.log(err);
+    }
+}
+
+async function disconnect(){
+    try {
         await client.end();
     } catch(err) {
         console.log(err);
     }
+}
+
+async function query(str){
+    return await client.query(str);
 }
