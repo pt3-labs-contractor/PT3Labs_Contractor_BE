@@ -1,33 +1,13 @@
-const { Client } = require('pg');
+const { Pool } = require('pg');
 
 module.exports = {
-  connect,
-  disconnect,
-  query,
+  query: function(text, values, cb) {
+    const pg = new Pool();
+    pg.connect(function(err, client, done) {
+      client.query(text, values, function(err, result) {
+        done();
+        cb(err, result);
+      });
+    });
+  },
 };
-
-const client = new Client();
-
-async function connect() {
-  try {
-    await client.connect();
-  } catch (err) {
-    console.log(err);
-  }
-}
-
-async function disconnect() {
-  try {
-    await client.end();
-  } catch (err) {
-    console.log(err);
-  }
-}
-
-async function query(str) {
-  try {
-    return client.query(str);
-  } catch (err) {
-    console.log(err);
-  }
-}

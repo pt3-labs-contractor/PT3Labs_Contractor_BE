@@ -1,14 +1,13 @@
 require('dotenv').config();
 const express = require('express');
 const app = express();
-const { connect, disconnect, query } = require('./db');
-
-connect();
+const { query } = require('./db');
 
 app.get('/contractors', (req, res) => {
-  query('SELECT * FROM contractors;')
-    .then(data => res.json({ contractors: data.rows }))
-    .catch(error => res.status(500).json({ error: error.message }));
+  query('SELECT * FROM contractors;', [], (error, result) => {
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ contractors: result.rows });
+  });
 });
 
 const port = process.env.PORT || 5000;
