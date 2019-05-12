@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "server": "nodemon index.js"
+    "server": "nodemon index.js",
+    "migrate_up": "node db/create_tables.js",
+    "migrate_down": "node db/drop_tables.js",
+    "seed": "node db/seeds.js"
   },
   "repository": {
     "type": "git",
@@ -20,6 +23,7 @@
   "dependencies": {
     "axios": "^0.18.0",
     "bcrypt": "^3.0.6",
+    "concurrently": "^4.1.0",
     "cors": "^2.8.5",
     "dotenv": "^8.0.0",
     "express": "^4.16.4",

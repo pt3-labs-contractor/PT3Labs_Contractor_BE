@@ -1,6 +1,32 @@
+const { Pool } = require('pg');
 const faker = require('faker');
 const bcrypt = require('bcrypt');
-const { query } = require('.');
+require('dotenv').config();
+
+const pool = new Pool({
+  user: process.env.PGUSER,
+  host: process.env.PGHOST,
+  password: process.env.PGPASSWORD,
+  database: process.env.PGDATABASE,
+  port: process.env.PGPORT,
+  max: 90,
+  idleTimeoutMillis: 0,
+});
+
+async function query(text, values) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await client.query(text, values);
+    await client.query('COMMIT');
+    return result;
+  } catch (error) {
+    console.log(error);
+    await client.query('ROLLBACK');
+  } finally {
+    await client.release();
+  }
+}
 
 function contractorSeeds() {
   query('DELETE FROM contractors;');
@@ -27,22 +53,36 @@ async function userSeeds() {
   const contractors = await query('SELECT * FROM contractors;');
   for (let i = 0; i < contractors.rows.length; i += 1) {
     const username = contractors.rows[i].name.replace(/\s/g, '') + i; // Add index, to be sure there are no repeating usernames
-    const password = await new Promise((resolve, reject) => {
-      bcrypt.hash('password', 10, (err, hash) => {
-        if (err) reject(err);
-        resolve(hash);
-      });
-    });
-    const email = `${username}@email.com`;
+    const password = 'password' + 1 + i;
     query(
       `
       INSERT INTO users ( username, password, email, contractor_id)
       VALUES ( $1, $2, $3, $4);
     `,
-      [username, password, email, contractors.rows[i].id]
+      [username, password, faker.internet.email() + i, contractors.rows[i].id]
+    );
+  }
+
+  for (let i = 0; i < 500; i += 1) {
+    const password = 'password' + 2 + i;
+    query(
+      `
+        INSERT INTO users ( username, password, email, contractor_id )
+        VALUES ( $1, $2, $3, $4);
+      `,
+      [
+        faker.internet.userName() + i,
+        password,
+        faker.internet.email() + i,
+        null,
+      ]
     );
   }
 }
+
+contractorSeeds();
+setTimeout(userSeeds, 2000);
+setTimeout(pool.end, 5000);
 
 module.exports = {
   contractorSeeds,

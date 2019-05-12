@@ -1,19 +1,17 @@
 require('dotenv').config();
 const express = require('express');
-const app = express();
 const { query } = require('./db');
-const { contractorSeeds, userSeeds } = require('./db/seeds');
 
-(function handleSeeds() {
-  contractorSeeds();
-  setTimeout(userSeeds, 1000); // To ensure all contractor seeds are added before starting
-})();
+const app = express();
 
 app.get('/contractors', (req, res) => {
-  query('SELECT * FROM contractors;', (error, result) => {
-    if (error) return res.status(500).json({ error: error.message });
-    res.json({ contractors: result.rows });
-  });
+  const contractors = query('SELECT * FROM contractors;');
+  res.json({ contractors });
+});
+
+app.get('/users', (req, res) => {
+  const users = query('SELECT * FROM users;');
+  res.json({ users });
 });
 
 const port = process.env.PORT || 5000;
