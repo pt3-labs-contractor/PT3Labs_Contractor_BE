@@ -11,7 +11,7 @@ app.get('/contractors', async (req, res) => {
 
 app.get('/users', async (req, res) => {
   const users = await query(
-    'SELECT (id, username, email, contractor_id, created_at) FROM users;'
+    'SELECT id, username, email, contractor_id, created_at FROM users;'
   );
   res.json({ users: users.rows });
 });
