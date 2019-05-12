@@ -1,6 +1,5 @@
 const { Pool } = require('pg');
 const faker = require('faker');
-const bcrypt = require('bcrypt');
 require('dotenv').config();
 
 const pool = new Pool({
@@ -21,8 +20,8 @@ async function query(text, values) {
     await client.query('COMMIT');
     return result;
   } catch (error) {
-    console.log(error);
     await client.query('ROLLBACK');
+    return error;
   } finally {
     await client.release();
   }
@@ -53,18 +52,21 @@ async function userSeeds() {
   const contractors = await query('SELECT * FROM contractors;');
   for (let i = 0; i < contractors.rows.length; i += 1) {
     const username = contractors.rows[i].name.replace(/\s/g, '') + i; // Add index, to be sure there are no repeating usernames
-    const password = 'password' + 1 + i;
     query(
       `
       INSERT INTO users ( username, password, email, contractor_id)
       VALUES ( $1, $2, $3, $4);
     `,
-      [username, password, faker.internet.email() + i, contractors.rows[i].id]
+      [
+        username,
+        faker.internet.password() + i,
+        faker.internet.email() + i,
+        contractors.rows[i].id,
+      ]
     );
   }
 
   for (let i = 0; i < 500; i += 1) {
-    const password = 'password' + 2 + i;
     query(
       `
         INSERT INTO users ( username, password, email, contractor_id )
@@ -72,7 +74,7 @@ async function userSeeds() {
       `,
       [
         faker.internet.userName() + i,
-        password,
+        faker.internet.password() + i,
         faker.internet.email() + i,
         null,
       ]

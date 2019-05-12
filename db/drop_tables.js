@@ -19,8 +19,8 @@ async function query(text, values) {
     await client.query('COMMIT');
     return result;
   } catch (error) {
-    console.log(error);
     await client.query('ROLLBACK');
+    return error;
   } finally {
     await client.release();
   }
@@ -32,8 +32,8 @@ function dropTables() {
     .then(() => query(`DROP TABLE IF EXISTS users;`))
     .then(() => query(`DROP TABLE IF EXISTS schedules;`))
     .then(() => query(`DROP TABLE IF EXISTS contractors;`))
-    .catch(err => console.log(err));
+    .then(() => pool.end())
+    .catch(err => err);
 }
 
 dropTables();
-setTimeout(() => pool.end(), 5000);

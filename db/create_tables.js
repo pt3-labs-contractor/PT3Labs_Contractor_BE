@@ -19,8 +19,8 @@ async function query(text, values) {
     await client.query('COMMIT');
     return result;
   } catch (error) {
-    console.log(error);
     await client.query('ROLLBACK');
+    return error;
   } finally {
     await client.release();
   }
@@ -28,7 +28,7 @@ async function query(text, values) {
 
 function createContractorsTable() {
   return query(`
-    CREATE TABLE contractors (
+    CREATE TABLE IF NOT EXISTS contractors (
       id UUID NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
       name VARCHAR(50) NOT NULL,
       phone_number VARCHAR(30) NOT NULL UNIQUE,
@@ -43,7 +43,7 @@ function createContractorsTable() {
 
 function createSchedulesTable() {
   return query(`
-    CREATE TABLE schedules (
+    CREATE TABLE IF NOT EXISTS schedules (
       contractor_id UUID NOT NULL,
       start_time TIMESTAMPTZ NOT NULL,
       duration INTERVAL NOT NULL,
@@ -57,7 +57,7 @@ function createSchedulesTable() {
 
 function createUsersTable() {
   return query(`
-    CREATE TABLE users (
+    CREATE TABLE IF NOT EXISTS users (
       id UUID NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
       username VARCHAR(50) NOT NULL UNIQUE,
       password VARCHAR(170) NOT NULL UNIQUE,
@@ -72,7 +72,7 @@ function createUsersTable() {
 
 function createServicesTable() {
   return query(`
-    CREATE TABLE services (
+    CREATE TABLE IF NOT EXISTS services (
       id UUID NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
       name VARCHAR(50) NOT NULL,
       price MONEY DEFAULT NULL,
@@ -86,7 +86,7 @@ function createServicesTable() {
 
 function createAppointmentsTable() {
   return query(`
-    CREATE TABLE appointments (
+    CREATE TABLE IF NOT EXISTS appointments (
       id UUID NOT NULL UNIQUE DEFAULT uuid_generate_v4() PRIMARY KEY,
       contractor_id UUID NOT NULL,
       user_id UUID NOT NULL,
@@ -105,11 +105,11 @@ function createAppointmentsTable() {
   `);
 }
 
-createContractorsTable()
+query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
+  .then(createContractorsTable)
   .then(createSchedulesTable)
   .then(createUsersTable)
   .then(createServicesTable)
   .then(createAppointmentsTable)
-  .catch(err => console.log(err));
-
-setTimeout(() => pool.end(), 5000);
+  .then(() => pool.end())
+  .catch(err => err);

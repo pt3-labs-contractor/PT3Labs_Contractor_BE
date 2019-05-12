@@ -10,8 +10,8 @@ async function query(text, values) {
     await client.query('COMMIT');
     return result;
   } catch (error) {
-    console.log(error);
     await client.query('ROLLBACK');
+    return error;
   } finally {
     await client.release();
   }
