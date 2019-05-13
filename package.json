@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "server": "nodemon index.js",
+    "graphql": "nodemon graphql/index.js",
     "migrate_up": "node db/create_tables.js",
     "migrate_down": "node db/drop_tables.js",
     "seed": "node db/seeds.js"
@@ -27,7 +28,9 @@
     "cors": "^2.8.5",
     "dotenv": "^8.0.0",
     "express": "^4.16.4",
+    "express-graphql": "^0.8.0",
     "faker": "^4.1.0",
+    "graphql": "^14.3.0",
     "helmet": "^3.18.0",
     "pg": "^7.11.0"
   },
