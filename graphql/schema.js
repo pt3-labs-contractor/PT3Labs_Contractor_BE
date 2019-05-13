@@ -49,8 +49,36 @@ const RootQuery = new GraphQLObjectType({
     users: {
       type: new GraphQLList(UserType),
       resolve() {
-        return query('SELECT * FROM users;')
+        return query(
+          'SELECT id, username, email, contractor_id, created_at FROM users;'
+        )
           .then(res => res.rows)
+          .catch(err => {
+            throw new Error(err);
+          });
+      },
+    },
+    contractor: {
+      type: ContractorType,
+      args: {
+        id: { type: GraphQLString },
+      },
+      resolve(parent, args) {
+        return query('SELECT * FROM contractors WHERE id = $1', [args.id])
+          .then(res => res.rows[0])
+          .catch(err => {
+            throw new Error(err);
+          });
+      },
+    },
+    user: {
+      type: UserType,
+      args: {
+        id: { type: GraphQLID },
+      },
+      resolve(parent, args) {
+        return query(`SELECT * FROM users WHERE id = $1`, [args.id])
+          .then(res => res.rows[0])
           .catch(err => {
             throw new Error(err);
           });
