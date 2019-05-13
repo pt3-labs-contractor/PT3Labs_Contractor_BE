@@ -5,6 +5,10 @@ const passport = require('passport')
 const GoogleStrategy = require('passport-google-oauth20').Strategy // .Strategy??
 const HaveACookie = require('express-session')
 
+// Configure view engine to render EJS templates.
+server.set('views', __dirname + '/views')
+server.set('view engine', 'ejs')
+
 // give me a cookie baby
 server.use(
 	HaveACookie({
@@ -21,20 +25,15 @@ server.use(
 )
 
 server.use(passport.initialize()) // initialize passport
-//server.use(passport.session()) // persist login sessions
-// Configure view engine to render EJS templates.
-// Configure view engine to render EJS templates.
-server.set('views', __dirname + '/views')
-server.set('view engine', 'ejs')
+server.use(passport.session()) // persist login sessions
 
 // Google Strategy
 
 passport.use(
 	new GoogleStrategy(
 		{
-			clientID:
-				'638199845142-pll5b3gadnre2abn6415qqsabjdag7m6.apps.googleusercontent.com', // your client id here
-			clientSecret: '-7eRhUgTXc-fAZRfU0i6IBPV', // your client secret here
+			clientID: 'your_client_id_here', // your client id here
+			clientSecret: 'your_client_secret_here', // your client secret here
 			callbackURL: 'http://localhost:5000/auth/google/callback'
 		},
 		(accessToken, refreshToken, profile, done) => {
@@ -55,7 +54,7 @@ passport.deserializeUser((user, done) => {
 
 // Middleware to check if the user is authenticated
 function isUserAuthenticated(req, res, next) {
-	if (req.user) {
+	if (req.HaveACookie) {
 		next()
 	} else {
 		res.send('not authorized, please log in now!')
@@ -70,9 +69,10 @@ server.get('/', (req, res) => {
 // passport.authenticate(middleware), specifying 'google' strategy for the requests
 server.get(
 	'/auth/google',
-	passport.authenticate('google', {
-		scope: ['profile'] // Used to specify the required data
-	})
+	passport.authenticate(
+		'google',
+		{ scope: ['profile'] } // Used to specify the required data
+	)
 )
 
 // The middleware receives the data from Google and runs the function on Strategy config
