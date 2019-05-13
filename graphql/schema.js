@@ -6,8 +6,8 @@ const {
   GraphQLList,
   GraphQLSchema,
 } = require('graphql');
-const { query } = require('../db');
 const bcrypt = require('bcrypt');
+const { query } = require('../db');
 
 const ContractorType = new GraphQLObjectType({
   name: 'Contractor',
