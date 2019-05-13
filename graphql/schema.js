@@ -62,7 +62,7 @@ const RootQuery = new GraphQLObjectType({
     contractor: {
       type: ContractorType,
       args: {
-        id: { type: GraphQLString },
+        id: { type: GraphQLID },
       },
       resolve(parent, args) {
         return query('SELECT * FROM contractors WHERE id = $1', [args.id])
