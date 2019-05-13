@@ -20,7 +20,7 @@
 	"author": "Bao Pham <ryanvuepham@gmail.com>",
 	"license": "MIT",
 	"scripts": {
-		"start": "nodemon server.js"
+		"dev": "nodemon server.js"
 	},
 	"description": "Back End",
 	"bugs": {

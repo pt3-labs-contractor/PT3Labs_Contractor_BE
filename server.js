@@ -6,16 +6,12 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy // .Strategy?
 const HaveACookie = require('express-session')
 
 // give me a cookie baby
-
-const session = require('express-session')
-
-// configure express-session middleware
 server.use(
 	HaveACookie({
 		name: 'notsession', // default is connect.sid
-		secret: 'nobody tosses a dwarf!',
+		secret: 'when life gives you lemon, have a cookie',
 		cookie: {
-			maxAge: 1 * 24 * 60 * 60 * 1000,
+			maxAge: 1 * 1 * 60 * 60 * 1000, //session for 1 hour in millisecond
 			secure: true // only set cookies over https. Server will not send back a cookie over http.
 		}, // 1 day in milliseconds
 		httpOnly: true, // don't let JS code access cookies. Browser extensions run JS code on your browser!
@@ -37,8 +33,8 @@ passport.use(
 	new GoogleStrategy(
 		{
 			clientID:
-				'887826498881-qpoqqrnaa338vqgkfvs21arpj90peqfp.apps.googleusercontent.com', // your client id here
-			clientSecret: '1B8pZs0dVExwPpV_S0Ty0pJV', // your client secret here
+				'638199845142-pll5b3gadnre2abn6415qqsabjdag7m6.apps.googleusercontent.com', // your client id here
+			clientSecret: '-7eRhUgTXc-fAZRfU0i6IBPV', // your client secret here
 			callbackURL: 'http://localhost:5000/auth/google/callback'
 		},
 		(accessToken, refreshToken, profile, done) => {
@@ -99,6 +95,4 @@ server.get('/logout', (req, res) => {
 	res.redirect('/')
 })
 
-server.listen(5000, () => {
-	console.log('Server is live on port 5000!')
-})
+server.listen(5000, console.log('Server is running on port 5000'))
