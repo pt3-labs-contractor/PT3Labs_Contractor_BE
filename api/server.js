@@ -8,6 +8,7 @@ const app = express();
 
 app.use(cors());
 app.use(helmet());
+app.use(express.json());
 app.use('/contractors', contractorRoutes);
 app.use('/users', userRoutes);
 app.use('/schedules', schedulesRoutes);
