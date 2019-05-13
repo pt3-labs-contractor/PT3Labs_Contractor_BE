@@ -105,11 +105,30 @@ function createAppointmentsTable() {
   `);
 }
 
+function createFeedbackTable() {
+  return query(`
+  CREATE TABLE feedback
+    (
+        id UUID NOT NULL UNIQUE DEFAULT uuid_generate_v4() PRIMARY KEY,
+        user_id UUID NOT NULL,
+        contractor_id UUID NOT NULL,
+        stars INT NOT NULL,
+        message VARCHAR(200) NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW(),
+        FOREIGN KEY (user_id) REFERENCES users(id)
+            ON DELETE SET NULL,
+        FOREIGN KEY (contractor_id) REFERENCES contractors(id)
+            ON DELETE SET NULL
+    );
+  `);
+}
+
 query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
   .then(createContractorsTable)
   .then(createSchedulesTable)
   .then(createUsersTable)
   .then(createServicesTable)
   .then(createAppointmentsTable)
+  .then(createFeedbackTable)
   .then(() => pool.end())
   .catch(err => err);
