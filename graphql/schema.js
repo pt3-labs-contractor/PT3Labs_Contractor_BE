@@ -7,6 +7,7 @@ const {
   GraphQLSchema,
 } = require('graphql');
 const { query } = require('../db');
+const bcrypt = require('bcrypt');
 
 const ContractorType = new GraphQLObjectType({
   name: 'Contractor',
@@ -87,6 +88,66 @@ const RootQuery = new GraphQLObjectType({
   }),
 });
 
+const mutation = new GraphQLObjectType({
+  name: 'Mutation',
+  fields: {
+    addContractor: {
+      type: ContractorType,
+      args: {
+        name: { type: new GraphQLNonNull(GraphQLString) },
+        phone_number: { type: new GraphQLNonNull(GraphQLString) },
+        street_address: { type: new GraphQLNonNull(GraphQLString) },
+        city: { type: new GraphQLNonNull(GraphQLString) },
+        state_abbr: { type: new GraphQLNonNull(GraphQLString) },
+        zip_code: { type: new GraphQLNonNull(GraphQLString) },
+      },
+      resolve(parent, args) {
+        return query(
+          `INSERT INTO contractors (name, phone_number, street_address, city, state_abbr, zip_code)
+          VALUES ($1, $2, $3, $4, $5, $6)
+          RETURNING id, name, phone_number, street_address, city, state_abbr, zip_code, created_at;`,
+          [
+            args.name,
+            args.phone_number,
+            args.street_address,
+            args.city,
+            args.state_abbr,
+            args.zip_code,
+          ]
+        )
+          .then(res => res.rows[0])
+          .catch(err => {
+            throw new Error(err);
+          });
+      },
+    },
+    addUser: {
+      type: UserType,
+      args: {
+        username: { type: new GraphQLNonNull(GraphQLString) },
+        password: { type: new GraphQLNonNull(GraphQLString) },
+        email: { type: new GraphQLNonNull(GraphQLString) },
+        contractor_id: { type: GraphQLID },
+      },
+      resolve(parent, args) {
+        const hash = bcrypt.hashSync(args.password, 12);
+        return query(
+          `INSERT INTO users (username, password, email, contractor_id)
+          VALUES ($1, $2, $3, $4)
+          RETURNING id, username, email, contractor_id, created_at;
+          `,
+          [args.username, hash, args.email, args.contractor_id]
+        )
+          .then(res => res.rows[0])
+          .catch(err => {
+            throw new Error(err);
+          });
+      },
+    },
+  },
+});
+
 module.exports = new GraphQLSchema({
   query: RootQuery,
+  mutation,
 });
