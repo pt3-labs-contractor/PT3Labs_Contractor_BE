@@ -4,7 +4,7 @@
   "description": "Back End",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "node graphql/index.js",
     "server": "nodemon index.js",
     "graphql": "nodemon graphql/index.js",
     "migrate_up": "node db/create_tables.js",
