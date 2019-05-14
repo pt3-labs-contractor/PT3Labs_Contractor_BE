@@ -5,30 +5,11 @@ const passport = require('passport')
 const haveACookie = require('express-session')
 const GoogleStrategy = require('passport-google-oauth20').Strategy
 
-// create a new Express application
-
-// Google Strategy
-
-// passport.use(
-// 	new GoogleStrategy(
-// 		{
-// 			clientID:
-// 				'638199845142-pll5b3gadnre2abn6415qqsabjdag7m6.apps.googleusercontent.com', // your client id here
-// 			clientSecret: '-7eRhUgTXc-fAZRfU0i6IBPV', // your client secret here
-// 			callbackURL: 'http://localhost:5000/auth/google/callback'
-// 		},
-// 		(accessToken, refreshToken, profile, done) => {
-// 			done(null, profile)
-// 		}
-// 	)
-// )
-
 passport.use(
 	new GoogleStrategy(
 		{
-			clientID:
-				'638199845142-pll5b3gadnre2abn6415qqsabjdag7m6.apps.googleusercontent.com',
-			clientSecret: '-7eRhUgTXc-fAZRfU0i6IBPV',
+			clientID: process.env.GOOGLE_CLIENT_ID,
+			clientSecret: process.env.GOOGLE_CLIENT_SECRET,
 			callbackURL: 'http://localhost:5000/auth/google/callback'
 		},
 		function(accessToken, refreshToken, profile, cb) {
