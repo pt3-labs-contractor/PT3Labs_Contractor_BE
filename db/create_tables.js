@@ -59,8 +59,8 @@ function createUsersTable() {
   return query(`
     CREATE TABLE IF NOT EXISTS users (
       id UUID NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+      google_id VARCHAR(30) NOT NULL UNIQUE,
       username VARCHAR(50) NOT NULL UNIQUE,
-      password VARCHAR(170) NOT NULL UNIQUE,
       email VARCHAR(50) NOT NULL UNIQUE,
       contractor_id UUID DEFAULT NULL,
       created_at TIMESTAMP DEFAULT now(),
