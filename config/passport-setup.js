@@ -3,6 +3,20 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20');
 const { query } = require('../db');
 
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+
+// Next step - set up session w/ Express Session
+
+passport.deserializeUser((id, done) => {
+  query('SELECT * FROM users WHERE id = $1', [id])
+    .then(result => done(null, result.rows[0]))
+    .catch(err => {
+      throw new Error(err);
+    });
+});
+
 passport.use(
   new GoogleStrategy(
     {
@@ -18,6 +32,7 @@ passport.use(
       if (response.rows.length) {
         console.log('User already registered!');
         console.log(response.rows[0]);
+        done(null, response.rows[0]);
       } else {
         const newEntry = await query(
           `INSERT INTO users (google_id, username, email)
@@ -27,8 +42,8 @@ passport.use(
         );
         console.log('User creation successful!');
         console.log(newEntry.rows[0]);
+        done(null, newEntry.rows[0]);
       }
-      done();
     }
   )
 );
