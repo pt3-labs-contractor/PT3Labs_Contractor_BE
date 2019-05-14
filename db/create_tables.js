@@ -61,6 +61,7 @@ function createUsersTable() {
       id UUID NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
       google_id VARCHAR(30) NOT NULL UNIQUE,
       username VARCHAR(50) NOT NULL UNIQUE,
+      phone_number VARCHAR(30) NOT NULL UNIQUE,
       email VARCHAR(50) NOT NULL UNIQUE,
       contractor_id UUID DEFAULT NULL,
       created_at TIMESTAMP DEFAULT now(),

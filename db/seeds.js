@@ -64,14 +64,15 @@ function userSeeds() {
       promises.push(
         query(
           `
-        INSERT INTO users ( google_id, username, email, contractor_id)
-        VALUES ( $1, $2, $3, $4);
+        INSERT INTO users ( google_id, username, phone_number, email, contractor_id)
+        VALUES ( $1, $2, $3, $4. $5);
       `,
           [
             Math.random()
               .toString()
               .slice(2),
             username,
+            contractors.rows[i].phone_number,
             faker.internet.email() + i,
             contractors.rows[i].id,
           ]
@@ -83,14 +84,15 @@ function userSeeds() {
       promises.push(
         query(
           `
-          INSERT INTO users ( google_id, username, email, contractor_id )
-          VALUES ( $1, $2, $3, $4);
+          INSERT INTO users ( google_id, username, phone_number, email, contractor_id )
+          VALUES ( $1, $2, $3, $4, $5);
         `,
           [
             Math.random()
               .toString()
               .slice(2) + i,
             faker.internet.userName() + i,
+            faker.phone.phoneNumber() + i,
             faker.internet.email() + i,
             null,
           ]
