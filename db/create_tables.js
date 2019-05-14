@@ -120,7 +120,7 @@ function createFeedbackTable() {
         FOREIGN KEY (contractor_id) REFERENCES contractors(id)
             ON DELETE SET NULL
     );
-  `)
+  `);
 }
 
 query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
