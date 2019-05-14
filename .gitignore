@@ -1,2 +1,3 @@
-## environment variables
+node_modules
 .env
+.vscode
