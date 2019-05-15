@@ -65,7 +65,7 @@ function userSeeds() {
         query(
           `
         INSERT INTO users ( google_id, username, phone_number, email, contractor_id)
-        VALUES ( $1, $2, $3, $4, $5);
+        VALUES ($1, $2, $3, $4, $5);
       `,
           [
             Math.random()
