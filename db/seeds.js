@@ -98,12 +98,48 @@ function userSeeds() {
   });
 }
 
+function scheduleSeeds() {
+  return new Promise(async resolve => {
+    await query('DELETE FROM schedules;');
+    const contractors = await query('SELECT FROM contractors;');
+    let promises = [];
+
+    function getRandomInt(max) {
+      return Math.floor(Math.random() * Math.floor(max)) + 1;
+    }
+
+    for(let i = 0; i < contractors.rows.length; i++) {
+      const num = getRandomInt(5)
+      for(let x = 0; x < num; x++) {
+        promises.push(
+          query(
+            `
+            INSERT INTO schedules ( contractor_id, start_time, duration )
+            VALUES ( $1, $2, $3 );
+            `,
+            [
+              contractors.rows[i].id,
+              faker.date.between('2019-5-1', '2019-5-31'),
+              faker.random.number({min: 1, max: 4})
+            ]
+          )
+        )
+      }
+    }
+    await Promise.all(promises);
+    resolve();
+  });
+}
+
+
 contractorSeeds()
   .then(() => userSeeds())
+  .then(() => scheduleSeeds())
   .then(() => pool.end())
   .catch(err => err);
 
 module.exports = {
   contractorSeeds,
   userSeeds,
+  scheduleSeeds,
 };
