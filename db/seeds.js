@@ -1,5 +1,6 @@
 const { Pool } = require('pg');
 const faker = require('faker');
+const moment = require('moment');
 require('dotenv').config();
 
 const pool = new Pool({
@@ -126,7 +127,7 @@ function scheduleSeeds() {
             [
               contractors.rows[i].id,
               faker.date.between('2019-5-1', '2019-5-31'),
-              `${faker.random.number({ min: 30, max: 120 })}m`,
+              `${faker.random.number({ min: 2, max: 5 })}h`,
             ]
           )
         );
@@ -137,9 +138,85 @@ function scheduleSeeds() {
   });
 }
 
+function servicesSeeds() {
+  return new Promise(async resolve => {
+    await query('DELETE FROM services;');
+    const contractors = await query('SELECT * FROM contractors;');
+    const promises = [];
+    for (let i = 0; i < contractors.rows.length; i += 1) {
+      const num = faker.random.number({ min: 1, max: 5 });
+      for (let j = 0; j < num; j += 1) {
+        promises.push(
+          query(
+            `INSERT INTO services (name, price, contractor_id)
+        VALUES ($1, $2, $3)`,
+            [
+              'Test Service',
+              faker.random.number({ min: 10, max: 100 }),
+              contractors.rows[i].id,
+            ]
+          )
+        );
+      }
+    }
+    await Promise.all(promises);
+    resolve();
+  });
+}
+
+function appointmentSeeds() {
+  // This code is messy, there seems to be something wrong with the timestamp (too many repeated values),
+  // and it doesn't account for not overflowing the schedule time, but I will come back to it.  Data is seeded successfully.
+  return new Promise(async resolve => {
+    await query('DELETE FROM appointments;');
+    const schedules = await query('SELECT * FROM schedules;');
+    const promises = [];
+    for (let i = 0; i < schedules.rows.length; i += 1) {
+      const randomUser = await query(
+        `SELECT id FROM users ORDER BY RANDOM() LIMIT 1;`
+      );
+      const servicesOffered = await query(
+        `SELECT * FROM services WHERE contractor_id = $1`,
+        [schedules.rows[i].contractor_id]
+      );
+      const timestamp = schedules.rows[i].start_time.toISOString();
+      const startTime = moment(timestamp);
+      const endTime = moment(timestamp).add(
+        schedules.rows[i].duration.hours,
+        'h'
+      );
+      const randomServiceIndex = faker.random.number({
+        min: 0,
+        max: servicesOffered.rows.length - 1,
+      });
+      const values = [
+        schedules.rows[i].contractor_id,
+        randomUser.rows[0].id,
+        servicesOffered.rows[randomServiceIndex].id,
+        faker.date.between(
+          startTime.format('YYYY-M-D'),
+          endTime.format('YYYY-M-D')
+        ),
+        `${faker.random.number({ min: 30, max: 60 })}m`,
+      ];
+      promises.push(
+        query(
+          `INSERT INTO appointments(contractor_id, user_id, service_id, appointment_datetime, duration)
+          VALUES ($1, $2, $3, $4, $5)`,
+          values
+        )
+      );
+    }
+    await Promise.all(promises);
+    resolve();
+  });
+}
+
 contractorSeeds()
   .then(() => userSeeds())
   .then(() => scheduleSeeds())
+  .then(() => servicesSeeds())
+  .then(() => appointmentSeeds())
   .then(() => pool.end())
   .catch(err => err);
 

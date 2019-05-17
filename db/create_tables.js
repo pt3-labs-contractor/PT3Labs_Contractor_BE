@@ -139,6 +139,8 @@ async function createIndices() {
     ON services (name ASC);`);
   await query(`CREATE INDEX IX_services_price
     ON services (price ASC);`);
+  await query(`CREATE INDEX IX_services_contractor_id
+    ON services (contractor_id);`);
   await query(`CREATE INDEX IX_appointments_datetime
     ON appointments (appointment_datetime);`);
 }
