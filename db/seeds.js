@@ -165,44 +165,39 @@ function servicesSeeds() {
 }
 
 function appointmentSeeds() {
-  // This code is messy, there seems to be something wrong with the timestamp (too many repeated values),
-  // and it doesn't account for not overflowing the schedule time, but I will come back to it.  Data is seeded successfully.
   return new Promise(async resolve => {
     await query('DELETE FROM appointments;');
     const schedules = await query('SELECT * FROM schedules;');
+    let randomUsers = schedules.rows.map(() =>
+      query(`SELECT id FROM users ORDER BY RANDOM() LIMIT 1;`)
+    );
+    let servicesOffered = schedules.rows.map(x =>
+      query(`SELECT * FROM services WHERE contractor_id = $1;`, [
+        x.contractor_id,
+      ])
+    );
+    randomUsers = await Promise.all(randomUsers);
+    servicesOffered = await Promise.all(servicesOffered);
     const promises = [];
     for (let i = 0; i < schedules.rows.length; i += 1) {
-      const randomUser = await query(
-        `SELECT id FROM users ORDER BY RANDOM() LIMIT 1;`
-      );
-      const servicesOffered = await query(
-        `SELECT * FROM services WHERE contractor_id = $1`,
-        [schedules.rows[i].contractor_id]
-      );
-      const timestamp = schedules.rows[i].start_time.toISOString();
-      const startTime = moment(timestamp);
-      const endTime = moment(timestamp).add(
-        schedules.rows[i].duration.hours,
-        'h'
-      );
+      const [user] = randomUsers[i].rows;
+      const services = servicesOffered[i].rows;
       const randomServiceIndex = faker.random.number({
         min: 0,
-        max: servicesOffered.rows.length - 1,
+        max: services.length - 1,
       });
+      const timestamp = schedules.rows[i].start_time.toISOString();
       const values = [
         schedules.rows[i].contractor_id,
-        randomUser.rows[0].id,
-        servicesOffered.rows[randomServiceIndex].id,
-        faker.date.between(
-          startTime.format('YYYY-M-D'),
-          endTime.format('YYYY-M-D')
-        ),
-        `${faker.random.number({ min: 30, max: 60 })}m`,
+        user.id,
+        services[randomServiceIndex].id,
+        timestamp,
+        `${faker.random.number({ min: 60, max: 120 })}m`,
       ];
       promises.push(
         query(
           `INSERT INTO appointments(contractor_id, user_id, service_id, appointment_datetime, duration)
-          VALUES ($1, $2, $3, $4, $5)`,
+            VALUES ($1, $2, $3, $4, $5)`,
           values
         )
       );
