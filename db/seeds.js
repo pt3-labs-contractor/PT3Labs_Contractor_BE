@@ -1,6 +1,5 @@
 const { Pool } = require('pg');
 const faker = require('faker');
-const moment = require('moment');
 require('dotenv').config();
 
 const pool = new Pool({
