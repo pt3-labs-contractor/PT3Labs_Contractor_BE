@@ -9,6 +9,8 @@ const {
   userRoutes,
   schedulesRoutes,
   authRoutes,
+  appointmentRoutes,
+  servicesRoutes,
 } = require('./routes');
 require('../config/passport-setup');
 
@@ -32,9 +34,11 @@ app.use(passport.session());
 app.use(cors());
 app.use(helmet());
 app.use(express.json());
-app.use('/contractors', contractorRoutes);
-app.use('/users', userRoutes);
-app.use('/schedules', schedulesRoutes);
 app.use('/auth', authRoutes);
+app.use('/contractors', contractorRoutes);
+app.use('/schedules', schedulesRoutes);
+app.use('/users', userRoutes);
+app.use('/services', servicesRoutes);
+app.use('/appointments', appointmentRoutes);
 
 module.exports = app;
