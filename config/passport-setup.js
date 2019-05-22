@@ -35,15 +35,10 @@ passport.use(
         done(null, response.rows[0]);
       } else {
         const newEntry = await query(
-          `INSERT INTO users (google_id, username, phone_number, email)
-          VALUES ($1, $2, $3, $4)
+          `INSERT INTO users (google_id)
+          VALUES ($1)
           RETURNING id, google_id, username, phone_number, email, contractor_id, created_at`,
-          [
-            profile.id,
-            'NEW_TEST_USER',
-            '(555) 555-5555',
-            'NEW_TEST_EMAIL@email.com',
-          ]
+          [profile.id]
         );
         console.log('User creation successful!');
         console.log(newEntry.rows[0]);

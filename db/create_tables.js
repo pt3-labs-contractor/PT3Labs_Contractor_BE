@@ -61,9 +61,9 @@ function createUsersTable() {
   CREATE TABLE IF NOT EXISTS users (
     id UUID NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
     google_id TEXT NOT NULL UNIQUE,
-    username TEXT NOT NULL UNIQUE,
-    phone_number TEXT NOT NULL UNIQUE,
-    email TEXT NOT NULL UNIQUE,
+    username TEXT UNIQUE,
+    phone_number TEXT UNIQUE,
+    email TEXT UNIQUE,
     contractor_id UUID DEFAULT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
     FOREIGN KEY (contractor_id) REFERENCES contractors(id)
