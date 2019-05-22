@@ -11,16 +11,16 @@ router.get(
 );
 
 router.get('/google/redirect', passport.authenticate('google'), (req, res) => {
-  res.redirect('http://localhost:3000');
+  console.log('GOT THROUGH', req.user);
+  res.redirect('/');
 });
 
 router.get('/logout', (req, res) => {
-  if (req.session){
+  if (req.session) {
     req.session.destroy(err => {
-      if (err) return res.status(500).json({ error: 'Error while logging out.' });
-      else {
-        res.redirect('/auth/google');
-      }
+      if (err)
+        return res.status(500).json({ error: 'Error while logging out.' });
+      return res.redirect('/');
     });
   }
 });

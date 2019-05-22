@@ -4,7 +4,7 @@ import { withRouter } from 'react-router';
 import { connect } from 'react-redux';
 import './App.css';
 
-import { fetchAccts } from './actions/index';
+import { getUser } from './actions/index';
 import Homepage from './components/homepage/Homepage';
 import Users from './components/users/Users';
 import ContractorList from './components/contractors/ContractorList';
@@ -14,7 +14,7 @@ import MainNavbar from './components/navbar/MainNavbar';
 
 function App(props) {
   useEffect(() => {
-    props.fetchAccts();
+    props.getUser();
     // eslint-disable-next-line
   }, []);
 
@@ -37,6 +37,6 @@ function App(props) {
 export default withRouter(
   connect(
     null,
-    { fetchAccts }
+    { getUser }
   )(App)
 );
