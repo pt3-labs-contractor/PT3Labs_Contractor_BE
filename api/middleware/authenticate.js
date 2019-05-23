@@ -1,7 +1,14 @@
+const jwt = require('jsonwebtoken');
+
 function authenticate(req, res, next) {
-  console.log(req.session);
-  if (req.session && req.session.passport) next();
-  else res.status(401).json({ error: 'Unauthenticated' });
+  try {
+    const [bearer, token] = req.headers.authorization.split(' ');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.decoded = decoded;
+    next();
+  } catch (err) {
+    res.status(401).json({ error: 'Unauthorized' });
+  }
 }
 
 module.exports = authenticate;

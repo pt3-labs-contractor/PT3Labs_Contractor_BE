@@ -1,13 +1,12 @@
 require('dotenv').config();
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20');
+const jwt = require('jsonwebtoken');
 const { query } = require('../db');
 
 passport.serializeUser((user, done) => {
   done(null, user.id);
 });
-
-// Next step - set up session w/ Express Session
 
 passport.deserializeUser((id, done) => {
   query('SELECT * FROM users WHERE id = $1', [id])
@@ -24,6 +23,7 @@ passport.use(
         'http://localhost:5000'}/api/auth/google/redirect`,
       clientID: process.env.GOOGLE_ID,
       clientSecret: process.env.GOOGLE_SECRET,
+      userProfileURL: 'https://www.googleapis.com/oauth2/v3/userinfo',
     },
     async (accessToken, refreshToken, profile, done) => {
       // Callback
@@ -31,9 +31,13 @@ passport.use(
         profile.id,
       ]);
       if (response.rows.length) {
-        console.log('User already registered!');
-        console.log(response.rows[0]);
-        done(null, response.rows[0]);
+        const token = jwt.sign(
+          { id: response.rows[0].id },
+          process.env.JWT_SECRET,
+          { expiresIn: '1d' }
+        );
+        const user = { ...response.rows[0], token };
+        done(null, user);
       } else {
         const newEntry = await query(
           `INSERT INTO users (google_id)
@@ -41,9 +45,13 @@ passport.use(
           RETURNING id, google_id, username, phone_number, email, contractor_id, created_at`,
           [profile.id]
         );
-        console.log('User creation successful!');
-        console.log(newEntry.rows[0]);
-        done(null, newEntry.rows[0]);
+        const token = jwt.sign(
+          { id: response.rows[0].id },
+          process.env.JWT_SECRET,
+          { expiresIn: '1d' }
+        );
+        const user = { ...newEntry.rows[0], token };
+        done(null, user);
       }
     }
   )
