@@ -46,7 +46,7 @@ passport.use(
           [profile.id]
         );
         const token = jwt.sign(
-          { id: response.rows[0].id },
+          { id: newEntry.rows[0].id },
           process.env.JWT_SECRET,
           { expiresIn: '1d' }
         );
