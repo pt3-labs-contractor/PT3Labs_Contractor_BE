@@ -101,16 +101,16 @@ function userSeeds() {
 function scheduleSeeds() {
   return new Promise(async resolve => {
     await query('DELETE FROM schedules;');
-    const contractors = await query('SELECT FROM contractors;');
-    let promises = [];
+    const contractors = await query('SELECT * FROM contractors;');
+    const promises = [];
 
     function getRandomInt(max) {
       return Math.floor(Math.random() * Math.floor(max)) + 1;
     }
 
-    for(let i = 0; i < contractors.rows.length; i++) {
-      const num = getRandomInt(5)
-      for(let x = 0; x < num; x++) {
+    for (let i = 0; i < contractors.rows.length; i += 1) {
+      const num = getRandomInt(5);
+      for (let x = 0; x < num; x += 1) {
         promises.push(
           query(
             `
@@ -120,17 +120,16 @@ function scheduleSeeds() {
             [
               contractors.rows[i].id,
               faker.date.between('2019-5-1', '2019-5-31'),
-              faker.random.number({min: 1, max: 4})
+              `${faker.random.number({ min: 30, max: 120 })}m`,
             ]
           )
-        )
+        );
       }
     }
     await Promise.all(promises);
     resolve();
   });
 }
-
 
 contractorSeeds()
   .then(() => userSeeds())
