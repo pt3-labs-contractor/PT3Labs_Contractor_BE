@@ -9,7 +9,7 @@ export const FETCH_USER_FAILURE = 'FETCH_USER_FAILURE';
 export const getUser = () => dispatch => {
   dispatch({ type: LOADING });
   axios
-    .get('http://localhost:5000/api/users')
+    .get('/api/users')
     .then(res =>
       dispatch({ type: FETCH_USER_SUCCESS, payload: res.data.users[0] })
     )
