@@ -60,7 +60,7 @@ function Register(props) {
         />
         <button type="submit">Submit</button>
       </form>
-      <a href="http://localhost:5000/api/auth/google">GOOGLE OAUTH</a>
+      <a href="/api/auth/google">GOOGLE OAUTH</a>
     </>
   );
 }
