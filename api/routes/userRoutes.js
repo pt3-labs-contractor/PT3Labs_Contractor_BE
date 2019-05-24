@@ -12,4 +12,22 @@ router.get('/', async (req, res) => {
   res.json({ users: users.rows });
 });
 
+// Get user by id
+router.get('/:id', async (req, res) => {
+  const { id } = req.params;
+  const user = await query(`SELECT FROM * users WHERE id=$1`, [id]);
+  res.json({ users: user.row[0] });
+});
+
+// router.put('/:id', (req, res) => {
+//   const {id} = req.params
+//   const {name, email, }
+// })
+
+router.delete('/:id', async (req, res) => {
+  const { id } = req.params;
+  const user = await query(`SELECT FROM users WHERE id=$1`, [id]);
+  res.json({ users: user.row[0] });
+});
+
 module.exports = router;
