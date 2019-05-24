@@ -64,12 +64,15 @@ function userSeeds() {
       promises.push(
         query(
           `
-        INSERT INTO users ( username, password, email, contractor_id)
-        VALUES ( $1, $2, $3, $4);
+        INSERT INTO users ( google_id, username, phone_number, email, contractor_id)
+        VALUES ($1, $2, $3, $4, $5);
       `,
           [
+            Math.random()
+              .toString()
+              .slice(2),
             username,
-            faker.internet.password() + i,
+            contractors.rows[i].phone_number,
             faker.internet.email() + i,
             contractors.rows[i].id,
           ]
@@ -81,12 +84,15 @@ function userSeeds() {
       promises.push(
         query(
           `
-          INSERT INTO users ( username, password, email, contractor_id )
-          VALUES ( $1, $2, $3, $4);
+          INSERT INTO users ( google_id, username, phone_number, email, contractor_id )
+          VALUES ( $1, $2, $3, $4, $5);
         `,
           [
+            Math.random()
+              .toString()
+              .slice(2) + i,
             faker.internet.userName() + i,
-            faker.internet.password() + i,
+            faker.phone.phoneNumber() + i,
             faker.internet.email() + i,
             null,
           ]
@@ -120,7 +126,7 @@ function scheduleSeeds() {
             [
               contractors.rows[i].id,
               faker.date.between('2019-5-1', '2019-5-31'),
-              `${faker.random.number({ min: 30, max: 120 })}m`,
+              `${faker.random.number({ min: 2, max: 5 })}h`,
             ]
           )
         );
@@ -131,9 +137,80 @@ function scheduleSeeds() {
   });
 }
 
+function servicesSeeds() {
+  return new Promise(async resolve => {
+    await query('DELETE FROM services;');
+    const contractors = await query('SELECT * FROM contractors;');
+    const promises = [];
+    for (let i = 0; i < contractors.rows.length; i += 1) {
+      const num = faker.random.number({ min: 1, max: 5 });
+      for (let j = 0; j < num; j += 1) {
+        promises.push(
+          query(
+            `INSERT INTO services (name, price, contractor_id)
+        VALUES ($1, $2, $3)`,
+            [
+              'Test Service',
+              faker.random.number({ min: 10, max: 100 }),
+              contractors.rows[i].id,
+            ]
+          )
+        );
+      }
+    }
+    await Promise.all(promises);
+    resolve();
+  });
+}
+
+function appointmentSeeds() {
+  return new Promise(async resolve => {
+    await query('DELETE FROM appointments;');
+    const schedules = await query('SELECT * FROM schedules;');
+    let randomUsers = schedules.rows.map(() =>
+      query(`SELECT id FROM users ORDER BY RANDOM() LIMIT 1;`)
+    );
+    let servicesOffered = schedules.rows.map(x =>
+      query(`SELECT * FROM services WHERE contractor_id = $1;`, [
+        x.contractor_id,
+      ])
+    );
+    randomUsers = await Promise.all(randomUsers);
+    servicesOffered = await Promise.all(servicesOffered);
+    const promises = [];
+    for (let i = 0; i < schedules.rows.length; i += 1) {
+      const [user] = randomUsers[i].rows;
+      const services = servicesOffered[i].rows;
+      const randomServiceIndex = faker.random.number({
+        min: 0,
+        max: services.length - 1,
+      });
+      const timestamp = schedules.rows[i].start_time.toISOString();
+      const values = [
+        schedules.rows[i].contractor_id,
+        user.id,
+        services[randomServiceIndex].id,
+        timestamp,
+        `${faker.random.number({ min: 60, max: 120 })}m`,
+      ];
+      promises.push(
+        query(
+          `INSERT INTO appointments(contractor_id, user_id, service_id, appointment_datetime, duration)
+            VALUES ($1, $2, $3, $4, $5)`,
+          values
+        )
+      );
+    }
+    await Promise.all(promises);
+    resolve();
+  });
+}
+
 contractorSeeds()
   .then(() => userSeeds())
   .then(() => scheduleSeeds())
+  .then(() => servicesSeeds())
+  .then(() => appointmentSeeds())
   .then(() => pool.end())
   .catch(err => err);
 
