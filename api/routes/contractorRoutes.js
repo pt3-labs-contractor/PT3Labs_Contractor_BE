@@ -49,6 +49,7 @@ router.put('/:id', async (req, res) => {
       'UPDATE contractors SET name = $1, phone_number = $2, street_address = $3, city = $4, state_abbr = $5, zip_code = $6, WHERE id= $7 RETURNING*',
       [name, phone_number, street_address, city, state_abbr, zip_code, id]
     );
+    return res.json({ contractor: contractor.rows });
   } catch (error) {
     switch (error.message) {
       case '404':
