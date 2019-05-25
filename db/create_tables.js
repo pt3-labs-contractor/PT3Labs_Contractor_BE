@@ -60,14 +60,20 @@ function createUsersTable() {
   return query(`
   CREATE TABLE IF NOT EXISTS users (
     id UUID NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
-    google_id TEXT NOT NULL UNIQUE,
+    google_id TEXT UNIQUE,
     username TEXT UNIQUE,
+    password TEXT UNIQUE,
     phone_number TEXT UNIQUE,
     email TEXT UNIQUE,
     contractor_id UUID DEFAULT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
     FOREIGN KEY (contractor_id) REFERENCES contractors(id)
-    ON DELETE CASCADE
+    ON DELETE CASCADE,
+    CONSTRAINT auth_origin CHECK (
+      (CASE WHEN google_id IS NULL THEN 0 ELSE 1 END
+      + CASE WHEN password IS NULL THEN 0 ELSE 1 END  
+      ) > 0
+    )
   );
   `);
 }
