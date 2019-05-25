@@ -5,29 +5,30 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const contractors = await query('SELECT * FROM contractors;');
-    return res.json({ contractors: contractors.rows });
+    const services = await query('SELECT * FROM services;');
+    return res.json({ services: services.rows });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
 });
 
-router.get('/:id', async (req, res) => {
+router.get('/:contractorId', async (req, res) => {
   try {
-    const { id } = req.params;
-    const contractor = await query('SELECT * FROM contractors WHERE id = $1;', [
-      id,
-    ]);
-    if (!contractor.rows || !contractor.rows.length) {
+    const { contractorId } = req.params;
+    const services = await query(
+      'SELECT * FROM services WHERE contractor_id = $1',
+      [contractorId]
+    );
+    if (!services.rows || !services.rows.length) {
       throw new Error(404);
     }
-    return res.json({ contractor: contractor.rows });
+    return res.json({ services: services.rows });
   } catch (error) {
     switch (error.message) {
       case '404':
         return res
           .status(404)
-          .json({ error: 'No contractor found with that ID.' });
+          .json({ error: 'No contractor with that ID found.' });
       default:
         return res.status(500).json({ error: error.message });
     }
