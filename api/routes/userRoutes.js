@@ -24,9 +24,9 @@ router.get('/:id', async (req, res) => {
 //   const {name, email, }
 // })
 
-router.delete('/:id', async (req, res) => {
-  const { id } = req.params;
-  const user = await query(`SELECT FROM users WHERE id=$1`, [id]);
+router.delete('/', async (req, res) => {
+  const { id } = req.params; // req.decoded
+  const user = await query(`DELETE FROM users WHERE id=$1`, [id]);
   res.json({ users: user.row[0] });
 });
 

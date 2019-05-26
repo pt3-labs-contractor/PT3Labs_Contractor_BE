@@ -35,4 +35,13 @@ router.get('/:contractorId', async (req, res) => {
   }
 });
 
+// As a callback
+router.post('/:contractorId', (req, res) => {
+  query('INSERT INO services () VALUE');
+});
+
+router.delete('/:contractorid', (req, res) => {
+  res.send('delete a service from a contractor');
+});
+
 module.exports = router;
