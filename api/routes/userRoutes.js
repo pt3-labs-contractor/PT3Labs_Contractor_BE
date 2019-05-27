@@ -35,7 +35,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.update('/:id', async (req, res) => {
+router.put('/:id', async (req, res) => {
   try {
     const user = await query(
       'UPDATE users SET phone_number = ($1), email = ($2) WHERE id = ($3) RETURNING *',
