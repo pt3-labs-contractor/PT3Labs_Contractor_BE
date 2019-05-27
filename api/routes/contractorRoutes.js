@@ -49,6 +49,9 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Post as callback func
+// Will write it later
+
 router.post('/', async (req, res) => {
   try {
     const contractor = await query(
@@ -133,8 +136,6 @@ router.put('/:id', async (req, res) => {
 //   }
 //   )
 // });
-
-// Post as callback func
 
 // As a callback
 router.delete('/:id', (req, res) => {
