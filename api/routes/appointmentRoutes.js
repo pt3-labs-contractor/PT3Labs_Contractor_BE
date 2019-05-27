@@ -15,7 +15,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await query('SELECT * FROM users WHERE id = $1', [id]);
+    const user = await query('SELECT * FROM appointments WHERE id = $1', [id]);
     if (!user.rows || !user.rows.length) {
       throw new Error(404);
     }
@@ -35,6 +35,56 @@ router.get('/:id', async (req, res) => {
         return res.status(500).json({ error: error.message });
     }
   }
+});
+
+router.post('/', async (req, res) => {
+  try {
+    const userAppt = await query(
+      'INSERT INTO appointments (contractor_id, user_id, service_id, appointment_datetime, duration) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [
+        req.body.contractor_id,
+        req.body.user_id,
+        req.body.service_id,
+        req.body.apointment_datetime,
+        req.body.duration,
+      ]
+    );
+    return res.json(userAppt.rows[0]);
+  } catch (err) {
+    return err;
+  }
+});
+
+// Post as callback func
+// will write later
+
+router.put('/:id', async (req, res) => {
+  try {
+    const userAppt = await query(
+      'UPDATE appointments SET contractor_id = ($1), appointment_datetime = ($2), duration = ($3) WHERE id = ($4) RETURNING *',
+      [
+        req.body.contractor_id,
+        req.body.appointment_datetime,
+        req.body.duration,
+        req.params.id,
+      ]
+    );
+    return res.json(userAppt.rows[0]);
+  } catch (err) {
+    return err;
+  }
+});
+
+// As a callback
+router.delete('/:id', (req, res) => {
+  const { id } = req.params;
+
+  query('DELETE FROM appointments WHERE id = $1', [id], (err, res) => {
+    if (err) {
+      throw err;
+    }
+    res.status(200).send(`apointments deleted with id: ${id}`);
+  });
 });
 
 module.exports = router;
