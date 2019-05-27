@@ -12,6 +12,7 @@ router.get('/', async (req, res) => {
   res.json({ users: users.rows });
 });
 
+// get user by id as a callback
 // Save just in case we need to use it
 // router.get('/:id', async (req, res) => {
 //   const { id } = req.params;

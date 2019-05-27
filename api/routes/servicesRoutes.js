@@ -33,7 +33,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// // GET service by id as promise.
+// // GET service by id as a promise.
 // router.get('/:id', (req, res) => {
 //   const { id } = req.params;
 //   query('SELECT * FROM services WHERE id = $1', [id])
