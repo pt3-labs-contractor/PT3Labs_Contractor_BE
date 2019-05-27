@@ -15,7 +15,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await query('SELECT * FROM users WHERE id = $1', [id]);
+    const user = await query('SELECT * FROM appointments WHERE id = $1', [id]);
     if (!user.rows || !user.rows.length) {
       throw new Error(404);
     }

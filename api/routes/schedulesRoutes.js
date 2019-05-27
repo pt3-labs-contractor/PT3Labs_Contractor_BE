@@ -33,18 +33,18 @@ router.get('/:id', async (req, res) => {
 });
 
 // Post as a callback
-router.post('/', (req, res) => {
-  query(
-    'INSERT INTO users (contractor_id, start_time, duration) VALUES ($1, $2, $3) RETURNING *',
-    [req.body.contractor_id, req.body.start_time, req.body.duration],
-    (error, result) => {
-      if (error) {
-        throw error;
-      }
-      res.status(201).send(`user added with ID: ${result.rows[0].id}`);
-    }
-  );
-});
+// router.post('/', (req, res) => {
+//   query(
+//     'INSERT INTO schedules (contractor_id, start_time, duration) VALUES ($1, $2, $3) RETURNING *',
+//     [req.body.contractor_id, req.body.start_time, req.body.duration],
+//     (error, result) => {
+//       if (error) {
+//         throw error;
+//       }
+//       res.status(201).send(`user added with ID: ${result.rows[0].id}`);
+//     }
+//   );
+// });
 
 router.post('/', async (req, res) => {
   try {
@@ -76,16 +76,16 @@ router.put('/:id', async (req, res) => {
 });
 
 // As a callback
-router.delete('/:id', (req, res) => {
-  const { id } = req.params;
+// router.delete('/:id', (req, res) => {
+//   const { id } = req.params;
 
-  query('DELETE FROM schedules WHERE id = $1', [id], (err, res) => {
-    if (err) {
-      throw err;
-    }
-    res.status(200).send(`schedule deleted with id: ${id}`);
-  });
-});
+//   query('DELETE FROM schedules WHERE id = $1', [id], (err, res) => {
+//     if (err) {
+//       throw err;
+//     }
+//     res.status(200).send(`schedule deleted with id: ${id}`);
+//   });
+// });
 
 // As a promise
 router.delete('/:id', (req, res) => {
