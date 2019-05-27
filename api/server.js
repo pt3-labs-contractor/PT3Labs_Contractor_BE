@@ -10,6 +10,7 @@ const {
   authRoutes,
   appointmentRoutes,
   servicesRoutes,
+  feedbackRoutes,
 } = require('./routes');
 const { authenticate, checkRequisiteUserInfo } = require('./middleware');
 require('../config/passport-setup');
@@ -28,5 +29,6 @@ app.use('/api/contractors', contractorRoutes);
 app.use('/api/schedules', schedulesRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/appointments', appointmentRoutes);
+app.use('/api/feedback', feedbackRoutes);
 
 module.exports = app;

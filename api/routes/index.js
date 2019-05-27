@@ -4,6 +4,7 @@ const schedulesRoutes = require('./schedulesRoutes');
 const authRoutes = require('./authRoutes');
 const appointmentRoutes = require('./appointmentRoutes');
 const servicesRoutes = require('./servicesRoutes');
+const feedbackRoutes = require('./feedbackRoutes');
 
 module.exports = {
   contractorRoutes,
@@ -12,4 +13,5 @@ module.exports = {
   authRoutes,
   appointmentRoutes,
   servicesRoutes,
+  feedbackRoutes,
 };
