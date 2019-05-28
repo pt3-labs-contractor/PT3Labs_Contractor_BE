@@ -9,7 +9,7 @@
     "migrate_up": "node db/create_tables.js",
     "migrate_down": "node db/drop_tables.js",
     "seed": "node db/seeds.js",
-    "dev": "concurrently \"npm run server\" \"npm run start --prefix client\""
+    "test": "cross-env DB_ENV=testing jest --watch"
   },
   "repository": {
     "type": "git",
