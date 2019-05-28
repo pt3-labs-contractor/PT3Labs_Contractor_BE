@@ -1,7 +1,66 @@
 const express = require('express');
 const passport = require('passport');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+const { query } = require('../../db');
 
 const router = express.Router();
+
+router.post('/register', async (req, res) => {
+  try {
+    const { username, password, phone_number, email } = req.body;
+    if ((!username || !password || !phone_number, !email)) throw new Error(400);
+    const hash = await bcrypt.hash(password, 12);
+    const user = await query(
+      `INSERT INTO users (username, password, phone_number, email)
+      VALUES ($1, $2, $3, $4)
+      RETURNING id, username, phone_number, email, created_at;`,
+      [username, hash, phone_number, email]
+    );
+    const token = jwt.sign({ id: user.rows[0].id }, process.env.JWT_SECRET, {
+      expiresIn: '1d',
+    });
+    return res.status(201).json({ token });
+  } catch (err) {
+    switch (err.message) {
+      case '400':
+        return res.status(400).json({
+          error:
+            'Request must includes values for username, password, phone_number, and email keys.',
+        });
+      default:
+        return res
+          .status(500)
+          .json({ error: 'There was a problem while registering.' });
+    }
+  }
+});
+
+router.post('/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) throw new Error(400);
+    const user = await query(`SELECT * FROM users WHERE username = $1`, [
+      username,
+    ]);
+    if (!user.rows[0] || !user.rows[0].password) throw new Error();
+    const valid = await bcrypt.compare(password, user.rows[0].password);
+    if (!valid) throw new Error();
+    const token = jwt.sign({ id: user.rows[0].id }, process.env.JWT_SECRET, {
+      expiresIn: '1d',
+    });
+    return res.json({ token });
+  } catch (err) {
+    switch (err.message) {
+      case '400':
+        return res.status(400).json({
+          error: 'Request must include values for username and password.',
+        });
+      default:
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+  }
+});
 
 router.get(
   '/google',
