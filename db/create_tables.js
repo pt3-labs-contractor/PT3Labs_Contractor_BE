@@ -2,13 +2,8 @@ const { Pool } = require('pg');
 require('dotenv').config();
 
 const pool = new Pool({
-  user: process.env.PGUSER,
-  host: process.env.PGHOST,
-  password: process.env.PGPASSWORD,
-  database: process.env.PGDATABASE,
-  port: process.env.PGPORT,
-  max: 20,
-  idleTimeoutMillis: 0,
+  connectionString:
+    'postgres://tfspjacsulsvty:1cbb47d1a92acd351914bf46fc46d3f6e74713652c784ac3cb1fdd5a7f5d1998@ec2-54-83-192-245.compute-1.amazonaws.com:5432/d2ap5d5ja6qbuu?ssl=true',
 });
 
 async function query(text, values) {
@@ -44,8 +39,10 @@ function createContractorsTable() {
 function createSchedulesTable() {
   return query(`
   CREATE TABLE IF NOT EXISTS schedules (
+		id SERIAL,
     contractor_id UUID NOT NULL,
     start_time TIMESTAMPTZ NOT NULL,
+		end_time TIMESTAMPTZ NOT NULL,
     duration INTERVAL NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
     UNIQUE (contractor_id, start_time),
@@ -150,6 +147,15 @@ async function createIndices() {
   await query(`CREATE INDEX IX_appointments_datetime
     ON appointments (appointment_datetime);`);
 }
+async function allTables() {
+  await createContractorsTable();
+  await createSchedulesTable();
+  await createUsersTable();
+  await createServicesTable();
+  await createAppointmentsTable();
+  await createFeedbackTable();
+  await createIndices();
+}
 
 query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
   .then(createContractorsTable)
@@ -161,3 +167,9 @@ query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
   .then(createIndices)
   .then(() => pool.end())
   .catch(err => err);
+
+module.exports = {
+  createSchedulesTable,
+  allTables,
+};
+require('make-runnable');

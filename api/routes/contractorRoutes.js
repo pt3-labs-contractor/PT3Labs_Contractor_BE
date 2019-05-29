@@ -49,6 +49,22 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+router.get('/schedules/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const tasks = await query(
+      `SELECT * FROM schedules WHERE contractor_id = $1;`,
+      [id]
+    );
+    if (!tasks.rows || !tasks.rows.length) {
+      throw new Error(404);
+    }
+    res.status(200).json({ schedules: tasks.rows });
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
+
 // Post as callback func
 // Will write it later
 

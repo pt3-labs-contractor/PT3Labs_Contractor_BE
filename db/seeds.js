@@ -1,15 +1,11 @@
 const { Pool } = require('pg');
 const faker = require('faker');
 require('dotenv').config();
+const moment = require('moment');
 
 const pool = new Pool({
-  user: process.env.PGUSER,
-  host: process.env.PGHOST,
-  password: process.env.PGPASSWORD,
-  database: process.env.PGDATABASE,
-  port: process.env.PGPORT,
-  max: 20,
-  idleTimeoutMillis: 0,
+  connectionString:
+    'postgres://tfspjacsulsvty:1cbb47d1a92acd351914bf46fc46d3f6e74713652c784ac3cb1fdd5a7f5d1998@ec2-54-83-192-245.compute-1.amazonaws.com:5432/d2ap5d5ja6qbuu?ssl=true',
 });
 
 async function query(text, values) {
@@ -126,23 +122,22 @@ function scheduleSeeds() {
     for (let i = 0; i < contractors.rows.length; i += 1) {
       const num = getRandomInt(5);
       for (let x = 0; x < num; x += 1) {
+        const startTime = faker.date.between('2019-5-1', '2019-5-31');
+        const endTime = moment(startTime).add(num, 'hours');
         promises.push(
           query(
             `
-            INSERT INTO schedules ( contractor_id, start_time, duration )
-            VALUES ( $1, $2, $3 );
+            INSERT INTO schedules ( contractor_id, start_time, end_time, duration )
+            VALUES ( $1, $2, $3, $4  );
             `,
-            [
-              contractors.rows[i].id,
-              faker.date.between('2019-5-1', '2019-5-31'),
-              `${faker.random.number({ min: 2, max: 5 })}h`,
-            ]
+            [contractors.rows[i].id, startTime, endTime, `${num}h`]
           )
         );
       }
     }
     await Promise.all(promises);
     resolve();
+    console.log(promises);
   });
 }
 
@@ -252,18 +247,27 @@ function feedbackSeeds() {
   });
 }
 
-deleteFromTables()
-  .then(() => contractorSeeds())
-  .then(() => scheduleSeeds())
-  .then(() => userSeeds())
-  .then(() => servicesSeeds())
-  .then(() => appointmentSeeds())
-  .then(() => feedbackSeeds())
-  .then(() => pool.end())
-  .catch(err => err);
+async function threeSeeds() {
+  await contractorSeeds();
+  await userSeeds();
+  await scheduleSeeds();
+}
+
+// deleteFromTables()
+//   .then(() => contractorSeeds())
+//   .then(() => scheduleSeeds())
+//   .then(() => userSeeds())
+//   .then(() => servicesSeeds())
+//   .then(() => appointmentSeeds())
+//   .then(() => feedbackSeeds())
+//   .then(() => pool.end())
+//   .catch(err => err);
 
 module.exports = {
-  contractorSeeds,
-  userSeeds,
+  // contractorSeeds,
+  // userSeeds,
   scheduleSeeds,
+  threeSeeds,
+  deleteFromTables,
 };
+require('make-runnable');

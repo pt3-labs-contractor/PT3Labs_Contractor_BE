@@ -21,7 +21,7 @@ passport.use(
     {
       callbackURL: `${process.env.SITE_ORIGIN ||
         'http://localhost:5000'}/api/auth/google/redirect`,
-      clientID: process.env.GOOGLE_ID,
+      clientID: process.env.GOOGLE_ID || 1,
       clientSecret: process.env.GOOGLE_SECRET,
       userProfileURL: 'https://www.googleapis.com/oauth2/v3/userinfo',
     },

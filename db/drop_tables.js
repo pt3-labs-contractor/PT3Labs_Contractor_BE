@@ -2,13 +2,8 @@ const { Pool } = require('pg');
 require('dotenv').config();
 
 const pool = new Pool({
-  user: process.env.PGUSER,
-  host: process.env.PGHOST,
-  password: process.env.PGPASSWORD,
-  database: process.env.PGDATABASE,
-  port: process.env.PGPORT,
-  max: 20,
-  idleTimeoutMillis: 0,
+  connectionString:
+    'postgres://tfspjacsulsvty:1cbb47d1a92acd351914bf46fc46d3f6e74713652c784ac3cb1fdd5a7f5d1998@ec2-54-83-192-245.compute-1.amazonaws.com:5432/d2ap5d5ja6qbuu?ssl=true',
 });
 
 async function query(text, values) {
@@ -36,5 +31,7 @@ function dropTables() {
     .then(() => pool.end())
     .catch(err => err);
 }
-
-dropTables();
+module.exports = {
+  dropTables,
+};
+require('make-runnable');
