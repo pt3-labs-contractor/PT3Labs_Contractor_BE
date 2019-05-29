@@ -117,8 +117,8 @@ function createFeedbackTable() {
   return query(`
   CREATE TABLE feedback (
     id UUID NOT NULL UNIQUE DEFAULT uuid_generate_v4() PRIMARY KEY,
-    user_id UUID NOT NULL,
-    contractor_id UUID NOT NULL,
+    user_id UUID,
+    contractor_id UUID,
     stars INT NOT NULL,
     message TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),

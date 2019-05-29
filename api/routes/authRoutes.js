@@ -70,7 +70,6 @@ router.get(
 );
 
 router.get('/google/redirect', passport.authenticate('google'), (req, res) => {
-  console.log('GOT THROUGH', req.user);
   res.redirect(`http://localhost:3000/redirect/${req.user.token}`);
 });
 

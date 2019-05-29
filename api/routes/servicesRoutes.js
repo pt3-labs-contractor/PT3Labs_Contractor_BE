@@ -77,7 +77,7 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', (req, res) => {
   const { id } = req.params;
 
-  query('DELETE FROM services WHERE id = $1', [id], (error, result) => {
+  query('DELETE FROM services WHERE id = $1', [id], error => {
     if (error) {
       throw error;
     }

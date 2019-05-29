@@ -227,8 +227,6 @@ function feedbackSeeds() {
         });
     });
     randomUsers = await Promise.all(randomUsers);
-    console.log(randomUsers.length);
-    console.log(randomUsers.reduce((a, b) => a + b.length, 0));
     const promises = [];
     for (let i = 0; i < contractors.rows.length; i += 1) {
       const users = randomUsers[i];
