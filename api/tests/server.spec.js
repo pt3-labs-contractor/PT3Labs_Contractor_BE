@@ -8,6 +8,16 @@ const testUser = {
   email: 'TEST_EMAIL@email.com',
   phone_number: '(555) 555-5555',
 };
+
+const testContractor = {
+  name: 'TEST_CONTRACTOR_INC',
+  phone_number: '(555) 555-5555',
+  street_address: '123 TEST ST.',
+  city: 'TEST_CITY',
+  state_abbr: 'TE',
+  zip_code: '55555',
+};
+
 let token;
 
 beforeEach(async () => {
@@ -52,6 +62,12 @@ describe('User routes', () => {
       .set('authorization', `Bearer ${token}`);
     expect(get.status).toBe(401);
   });
+  it('Should not display information for a non-authenticated user', async () => {
+    const response = await request(server)
+      .get('/api/users');
+    expect(response.status).toBe(401);
+    expect(response.body.error).toBeTruthy();
+  });
 });
 
 describe('Contractor routes', () => {
@@ -61,5 +77,28 @@ describe('Contractor routes', () => {
       .set('authorization', `Bearer ${token}`);
     expect(response.status).toBe(200);
     expect(Array.isArray(response.body.contractors)).toBeTruthy();
+  });
+  it('Should not display contractors for non-authenticated user', async () => {
+    const response = await request(server)
+      .get('/api/contractors');
+    expect(response.status).toBe(401);
+    expect(response.body.error).toBeTruthy();
+  });
+});
+
+describe('Schedules routes', () => {
+  let contractor;
+  beforeAll(async () => {
+    const randomContractor = await query(`
+      SELECT * FROM contractors ORDER BY RANDOM() LIMIT 1;
+    `);
+    contractor = randomContractor.rows[0];
+  });
+  it('Should display contractor\'s upcoming schedule when provided ID.', async () => {
+    const response = await request(server)
+      .get(`/api/schedules/${contractor.id}`)
+      .set('authorization', `Bearer ${token}`);
+    expect(response.status).toBe(200);
+    expect(Array.isArray(response.body.schedule)).toBeTruthy();
   });
 });
