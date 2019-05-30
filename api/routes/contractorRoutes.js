@@ -12,6 +12,21 @@ router.get('/', async (req, res) => {
   }
 });
 
+// As a promise. please leave it as comment out
+// router.get('/', (req, res, next) => {
+//   query('SELECT * FROM contractors')
+//     .then(contractors => {
+//       res.status(200).json({
+//         status: 'success',
+//         contractors,
+//         message: 'Retrieved All contractors',
+//       });
+//     })
+//     .catch(err => {
+//       return next(err);
+//     });
+// });
+
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -30,6 +45,140 @@ router.get('/:id', async (req, res) => {
           .json({ error: 'No contractor found with that ID.' });
       default:
         return res.status(500).json({ error: error.message });
+    }
+  }
+});
+
+router.post('/', async (req, res) => {
+  try {
+    const {
+      contractorName,
+      phoneNumber,
+      streetAddress,
+      city,
+      stateAbbr,
+      zipCode,
+    } = req.body;
+    // const { id } = req.decoded;
+    if (
+      !contractorName ||
+      !phoneNumber ||
+      !streetAddress ||
+      !city ||
+      !stateAbbr ||
+      !zipCode
+    )
+      throw new Error(400);
+    const contractor = await query(
+      'INSERT INTO contractors (name, "phoneNumber", "streetAddress", city, "stateAbbr", "zipCode") VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [contractorName, phoneNumber, streetAddress, city, stateAbbr, zipCode]
+    );
+    // await query(`UPDATE users SET contractorId = $1 WHERE id = $2;`, [
+    //   contractor.rows[0].id,
+    //   id,
+    // ]);
+    return res.status(201).json(contractor.rows[0]);
+  } catch (err) {
+    switch (err.message) {
+      case '400':
+        return res.status(400).json({
+          error:
+            'Request must includes values for contractorName, phoneNumber, streetAddress, city, stateAbbr, and zipCode keys.',
+        });
+      default:
+        return res.status(500).json({
+          error: 'There was an error while attempting to add contractor.',
+        });
+    }
+  }
+});
+
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const contractor = await query(
+      'UPDATE contractors SET name = $1, "phoneNumber" = $2, "streetAddress" = $3, city = $4, "stateAbbr" = $5, "zipCode" = $6 WHERE id= $7 RETURNING *',
+      [
+        req.body.name,
+        req.body.phoneNumber,
+        req.body.streetAddress,
+        req.body.city,
+        req.body.stateAbbr,
+        req.body.zipCode,
+        id,
+      ]
+    );
+    return res.json({ contractor: contractor.rows[0] });
+  } catch (error) {
+    switch (error.message) {
+      case '404':
+        return res
+          .status(404)
+          .json({ error: 'No contractor found with that ID.' });
+      default:
+        return res.status(500).json({ error: error.message });
+    }
+  }
+});
+
+// Note: Use this one if the one above doesnt work
+// router.put('/:id', async (req, res) => {
+//   try {
+//     const contractor = await query(
+//       'UPDATE contractors SET name = ($1), phoneNumber = ($2), streetAddress = ($3), city = ($4), stateAbbr = ($5), zipCode = ($6) WHERE id = ($7) RETURNING *',
+//       [
+//         req.body.name,
+//         req.body.phoneNumber,
+//         req.body.streetAddress,
+//         req.body.city,
+//         req.body.stateAbbr,
+//         req.body.zipCode,
+//         req.params.id,
+//       ]
+//     );
+//     return res.json(contractor.rows[0]);
+//   } catch (err) {
+//     return err;
+//   }
+// });
+
+// As a callback. Note:  save for back up endpoint
+// router.put('/:id', (req, res) => {
+//   const id = parseInt(req.params.id);
+//   const {name, phoneNumber, streetAddress, city, stateAbbr, zipCode} = request.body};
+
+//   query(
+//   'UPDATE contractors SET name = $1, phoneNumber = $2, streetAddress = $3, city = $4, stateAbbr = $5, zipCode = $6 WHERE id = $7',
+//   [name, phoneNumber, streetAddress, city, stateAbbr, zipCode],
+//   (error, result) => {
+//     if (error) {
+//       throw error
+//     }
+//     res.status(200).send(`contractor modified with ID: ${id}`)
+//   }
+//   )
+// });
+
+// As a callback
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const contractor = await query(
+      'DELETE FROM contractors WHERE id = $1 RETURNING *',
+      [id]
+    );
+    if (!contractor.rows || !contractor.rows[0]) throw new Error(404);
+    return res.json({ deleted: contractor.rows[0] });
+  } catch (err) {
+    switch (err.message) {
+      case '404':
+        return res
+          .status(404)
+          .json({ error: 'No contractor by that ID found.' });
+      default:
+        return res.status(500).json({
+          error: 'There was an error while attempting to delete contractor.',
+        });
     }
   }
 });
