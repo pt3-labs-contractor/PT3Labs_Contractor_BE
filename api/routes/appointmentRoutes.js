@@ -42,10 +42,10 @@ router.post('/', async (req, res) => {
     const userAppt = await query(
       'INSERT INTO appointments (contractor_id, user_id, service_id, appointment_datetime, duration) VALUES ($1, $2, $3, $4, $5) RETURNING *',
       [
-        req.body.contractor_id,
-        req.body.user_id,
-        req.body.service_id,
-        req.body.apointment_datetime,
+        req.body.contractorId,
+        req.decoded.id,
+        req.body.serviceId,
+        req.body.apointmentDatetime,
         req.body.duration,
       ]
     );
@@ -63,8 +63,8 @@ router.put('/:id', async (req, res) => {
     const userAppt = await query(
       'UPDATE appointments SET contractor_id = ($1), appointment_datetime = ($2), duration = ($3) WHERE id = ($4) RETURNING *',
       [
-        req.body.contractor_id,
-        req.body.appointment_datetime,
+        req.body.contractorId,
+        req.body.appointmentDatetime,
         req.body.duration,
         req.params.id,
       ]

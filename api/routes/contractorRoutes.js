@@ -83,7 +83,7 @@ router.post('/', async (req, res) => {
       case '400':
         return res.status(400).json({
           error:
-            'Request must includes values for contractor_name, phone_number, street_address, city, state_abbr, and zip_code keys.',
+            'Request must includes values for contractorName, phoneNumber, streetAddress, city, stateAbbr, and zipCode keys.',
         });
       default:
         return res.status(500).json({

@@ -55,7 +55,7 @@ router.post('/', async (req, res) => {
     }
     const schedule = await query(
       'INSERT * FROM schedules (contractor_id, start_time, duration) VALUES ($1, $2, $3) RETURNING *',
-      [req.body.contractor_id, req.body.start_time, req.body.duration]
+      [req.body.contractorId, req.body.startTime, req.body.duration]
     );
     return res.json({ schedule: schedule.rows[0] });
   } catch (err) {
@@ -75,8 +75,8 @@ router.put('/:id', async (req, res) => {
     const schedule = await query(
       'UPDATE schedules SET contractor_id = ($1), start_time = ($2), duartion = ($3) RETURNING *',
       [
-        req.body.contractor_id,
-        req.body.start_time,
+        req.body.contractorId,
+        req.body.startTime,
         req.body.duration,
         req.params.id,
       ]

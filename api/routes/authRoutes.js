@@ -55,12 +55,12 @@ router.post('/register', async (req, res) => {
       case '400':
         return res.status(400).json({
           error:
-            'Request must includes values for username, password, phone_number, and email keys.',
+            'Request must includes values for username, password, phoneNumber, and email keys.',
         });
       case 'contractor 400':
         return res.status(400).json({
           error:
-            'New contractor must include values for street_address, city, state_abbr, and zip_code.',
+            'New contractor must include values for streetAddress, city, stateAbbr, and zipCode.',
         });
       default:
         return res
