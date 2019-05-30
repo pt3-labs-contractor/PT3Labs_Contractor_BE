@@ -70,10 +70,10 @@ router.post('/', async (req, res) => {
     )
       throw new Error(400);
     const contractor = await query(
-      'INSERT INTO contractors (name, phone_number, street_address, city, state_abbr, zip_code) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      'INSERT INTO contractors (name, phoneNumber, streetAddress, city, stateAbbr, zipCode) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
       [contractorName, phoneNumber, streetAddress, city, stateAbbr, zipCode]
     );
-    // await query(`UPDATE users SET contractor_id = $1 WHERE id = $2;`, [
+    // await query(`UPDATE users SET contractorId = $1 WHERE id = $2;`, [
     //   contractor.rows[0].id,
     //   id,
     // ]);
@@ -97,14 +97,14 @@ router.put('/:id', async (req, res) => {
   const { id } = req.params;
   try {
     const contractor = await query(
-      'UPDATE contractors SET name = $1, phone_number = $2, street_address = $3, city = $4, state_abbr = $5, zip_code = $6 WHERE id= $7 RETURNING *',
+      'UPDATE contractors SET name = $1, phoneNumber = $2, streetAddress = $3, city = $4, stateAbbr = $5, zipCode = $6 WHERE id= $7 RETURNING *',
       [
         req.body.name,
-        req.body.phone_number,
-        req.body.street_address,
+        req.body.phoneNumber,
+        req.body.streetAddress,
         req.body.city,
-        req.body.state_abbr,
-        req.body.zip_code,
+        req.body.stateAbbr,
+        req.body.zipCode,
         id,
       ]
     );
@@ -125,14 +125,14 @@ router.put('/:id', async (req, res) => {
 // router.put('/:id', async (req, res) => {
 //   try {
 //     const contractor = await query(
-//       'UPDATE contractors SET name = ($1), phone_number = ($2), street_address = ($3), city = ($4), state_abbr = ($5), zip_code = ($6) WHERE id = ($7) RETURNING *',
+//       'UPDATE contractors SET name = ($1), phoneNumber = ($2), streetAddress = ($3), city = ($4), stateAbbr = ($5), zipCode = ($6) WHERE id = ($7) RETURNING *',
 //       [
 //         req.body.name,
-//         req.body.phone_number,
-//         req.body.street_address,
+//         req.body.phoneNumber,
+//         req.body.streetAddress,
 //         req.body.city,
-//         req.body.state_abbr,
-//         req.body.zip_code,
+//         req.body.stateAbbr,
+//         req.body.zipCode,
 //         req.params.id,
 //       ]
 //     );
@@ -145,11 +145,11 @@ router.put('/:id', async (req, res) => {
 // As a callback. Note:  save for back up endpoint
 // router.put('/:id', (req, res) => {
 //   const id = parseInt(req.params.id);
-//   const {name, phone_number, street_address, city, state_abbr, zip_code} = request.body};
+//   const {name, phoneNumber, streetAddress, city, stateAbbr, zipCode} = request.body};
 
 //   query(
-//   'UPDATE contractors SET name = $1, phone_number = $2, street_address = $3, city = $4, state_abbr = $5, zip_code = $6 WHERE id = $7',
-//   [name, phone_number, street_address, city, state_abbr, zip_code],
+//   'UPDATE contractors SET name = $1, phoneNumber = $2, streetAddress = $3, city = $4, stateAbbr = $5, zipCode = $6 WHERE id = $7',
+//   [name, phoneNumber, streetAddress, city, stateAbbr, zipCode],
 //   (error, result) => {
 //     if (error) {
 //       throw error

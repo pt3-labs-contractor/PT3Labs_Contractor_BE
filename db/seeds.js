@@ -46,7 +46,7 @@ function contractorSeeds() {
       promises.push(
         query(
           `
-            INSERT INTO contractors (name, phone_number, street_address, city, state_abbr, zip_code)
+            INSERT INTO contractors (name, "phoneNumber", "streetAddress", city, "stateAbbr", "zipCode")
             VALUES ($1, $2, $3, $4, $5, $6);
           `,
           [
@@ -74,7 +74,7 @@ function userSeeds() {
       promises.push(
         query(
           `
-        INSERT INTO users ( google_id, username, phone_number, email, contractor_id)
+        INSERT INTO users ( "googleId", username, "phoneNumber", email, "contractorId")
         VALUES ($1, $2, $3, $4, $5);
       `,
           [
@@ -82,7 +82,7 @@ function userSeeds() {
               .toString()
               .slice(2),
             username,
-            contractors.rows[i].phone_number,
+            contractors.rows[i].phoneNumber,
             faker.internet.email() + i,
             contractors.rows[i].id,
           ]
@@ -94,7 +94,7 @@ function userSeeds() {
       promises.push(
         query(
           `
-          INSERT INTO users ( google_id, username, phone_number, email, contractor_id )
+          INSERT INTO users ( "googleId", username, "phoneNumber", email, "contractorId" )
           VALUES ( $1, $2, $3, $4, $5);
         `,
           [
@@ -124,7 +124,7 @@ function scheduleSeeds() {
         promises.push(
           query(
             `
-            INSERT INTO schedules ( contractor_id, start_time, duration )
+            INSERT INTO schedules ( "contractorId", "startTime", duration )
             VALUES ( $1, $2, $3 );
             `,
             [
@@ -150,7 +150,7 @@ function servicesSeeds() {
       for (let j = 0; j < num; j += 1) {
         promises.push(
           query(
-            `INSERT INTO services (name, price, contractor_id)
+            `INSERT INTO services (name, price, "contractorId")
         VALUES ($1, $2, $3)`,
             [
               'Test Service',
@@ -173,8 +173,8 @@ function appointmentSeeds() {
       query(`SELECT id FROM users ORDER BY RANDOM() LIMIT 1;`)
     );
     let servicesOffered = schedules.rows.map(x =>
-      query(`SELECT * FROM services WHERE contractor_id = $1;`, [
-        x.contractor_id,
+      query(`SELECT * FROM services WHERE "contractorId" = $1;`, [
+        x.contractorId,
       ])
     );
     randomUsers = await Promise.all(randomUsers);
@@ -187,9 +187,9 @@ function appointmentSeeds() {
         min: 0,
         max: services.length - 1,
       });
-      const timestamp = schedules.rows[i].start_time.toISOString();
+      const timestamp = schedules.rows[i].startTime.toISOString();
       const values = [
-        schedules.rows[i].contractor_id,
+        schedules.rows[i].contractorId,
         user.id,
         services[randomServiceIndex].id,
         timestamp,
@@ -197,7 +197,7 @@ function appointmentSeeds() {
       ];
       promises.push(
         query(
-          `INSERT INTO appointments(contractor_id, user_id, service_id, appointment_datetime, duration)
+          `INSERT INTO appointments("contractorId", "userId", "serviceId", "appointmentDatetime", duration)
             VALUES ($1, $2, $3, $4, $5)`,
           values
         )
@@ -228,7 +228,7 @@ function feedbackSeeds() {
       for (let j = 0; j < users.length; j += 1) {
         promises.push(
           query(
-            `INSERT INTO feedback (user_id, contractor_id, stars, message)
+            `INSERT INTO feedback ("userId", "contractorId", stars, message)
             VALUES ($1, $2, $3, $4);`,
             [
               users[j].id,

@@ -26,23 +26,23 @@ router.post('/register', async (req, res) => {
       if (!streetAddress || !city || !stateAbbr || !zipCode)
         throw new Error('contractor 400');
       const contractor = await query(
-        `INSERT INTO contractors (name, phone_number, street_address, city, state_abbr, zip_code)
+        `INSERT INTO contractors (name, phoneNumber, streetAddress, city, stateAbbr, zipCode)
         VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING id;`,
         [contractorName, phoneNumber, streetAddress, city, stateAbbr, zipCode]
       );
       user = await query(
-        `INSERT INTO users (username, password, phone_number, email, contractor_id)
+        `INSERT INTO users (username, password, phoneNumber, email, contractorId)
         VALUES ($1, $2, $3, $4, $5)
-        RETURNING id, username, phone_number, email, contractor_id, created_at;
+        RETURNING id, username, phoneNumber, email, contractorId, createdAt;
         `,
         [username, hash, phoneNumber, email, contractor.rows[0].id]
       );
     } else {
       user = await query(
-        `INSERT INTO users (username, password, phone_number, email)
+        `INSERT INTO users (username, password, phoneNumber, email)
       VALUES ($1, $2, $3, $4)
-      RETURNING id, username, phone_number, email, created_at;`,
+      RETURNING id, username, phoneNumber, email, createdAt;`,
         [username, hash, phoneNumber, email]
       );
     }

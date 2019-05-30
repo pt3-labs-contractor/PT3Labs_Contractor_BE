@@ -19,8 +19,8 @@ router.get('/:id', async (req, res) => {
     if (!user.rows || !user.rows.length) {
       throw new Error(404);
     }
-    const isContractor = user.rows[0].contractor_id;
-    const attribute = isContractor ? 'contractor_id' : 'user_id';
+    const isContractor = user.rows[0].contractorId;
+    const attribute = isContractor ? 'contractorId' : 'userId';
     const value = isContractor || user.rows[0].id;
     const appointments = await query(
       `SELECT * FROM appointments WHERE ${attribute} = $1`, // attribute will only ever be defined by server, no risk of injection.
@@ -40,7 +40,7 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const userAppt = await query(
-      'INSERT INTO appointments (contractor_id, user_id, service_id, appointment_datetime, duration) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      'INSERT INTO appointments (contractorId, userId, serviceId, appointmentDatetime, duration) VALUES ($1, $2, $3, $4, $5) RETURNING *',
       [
         req.body.contractorId,
         req.decoded.id,
@@ -61,7 +61,7 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const userAppt = await query(
-      'UPDATE appointments SET contractor_id = ($1), appointment_datetime = ($2), duration = ($3) WHERE id = ($4) RETURNING *',
+      'UPDATE appointments SET contractorId = ($1), appointmentDatetime = ($2), duration = ($3) WHERE id = ($4) RETURNING *',
       [
         req.body.contractorId,
         req.body.appointmentDatetime,

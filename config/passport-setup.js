@@ -27,7 +27,7 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       // Callback
-      const response = await query('SELECT * FROM users WHERE google_id = $1', [
+      const response = await query('SELECT * FROM users WHERE googleId = $1', [
         profile.id,
       ]);
       if (response.rows.length) {
@@ -40,9 +40,9 @@ passport.use(
         done(null, user);
       } else {
         const newEntry = await query(
-          `INSERT INTO users (google_id)
+          `INSERT INTO users (googleId)
           VALUES ($1)
-          RETURNING id, google_id, username, phone_number, email, contractor_id, created_at`,
+          RETURNING id, googleId, username, phoneNumber, email, contractorId, createdAt`,
           [profile.id]
         );
         const token = jwt.sign(

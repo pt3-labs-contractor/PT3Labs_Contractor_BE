@@ -6,16 +6,16 @@ const testUser = {
   username: 'TEST_USER',
   password: 'TEST_PASSWORD',
   email: 'TEST_EMAIL@email.com',
-  phone_number: '(555) 555-5555',
+  phoneNumber: '(555) 555-5555',
 };
 
 const testContractor = {
   name: 'TEST_CONTRACTOR_INC',
-  phone_number: '(555) 555-5555',
-  street_address: '123 TEST ST.',
+  phoneNumber: '(555) 555-5555',
+  streetAddress: '123 TEST ST.',
   city: 'TEST_CITY',
-  state_abbr: 'TE',
-  zip_code: '55555',
+  stateAbbr: 'TE',
+  zipCode: '55555',
 };
 
 let token;
@@ -40,7 +40,7 @@ describe('User routes', () => {
       .get('/api/users')
       .set('authorization', `Bearer ${token}`);
     expect(response.body.user.username).toBe(testUser.username);
-    expect(response.body.user.contractor_id).toBeTruthy();
+    expect(response.body.user.contractorId).toBeTruthy();
   });
   it('Should allow user to update their information', async () => {
     const response = await request(server)

@@ -14,7 +14,7 @@ async function checkRequisiteUserInfo(req, res, next) {
     }).filter(attribute => !attribute[1]);
     if (requiredInfo.length)
       return res.status(400).json({
-        missing_information: requiredInfo.map(attribute => attribute[0]),
+        missingInformation: requiredInfo.map(attribute => attribute[0]),
       });
     return next();
   } catch (error) {

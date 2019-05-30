@@ -6,7 +6,7 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     const users = await query(
-      `SELECT id, username, phone_number, email, contractor_id, created_at FROM users
+      `SELECT id, username, phoneNumber, email, contractorId, createdAt FROM users
       WHERE id = $1`,
       [req.decoded.id]
     );
@@ -38,7 +38,7 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const user = await query(
-      'SELECT id, username, phone_number, email, contractor_id, created_at FROM users WHERE id = $1;',
+      'SELECT id, username, phoneNumber, email, contractorId, createdAt FROM users WHERE id = $1;',
       [id]
     );
     if (!user.rows || !user.rows[0]) {
@@ -58,11 +58,11 @@ router.get('/:id', async (req, res) => {
 // Post as a callback function
 
 // router.post('/', (req, res) => {
-//   const { google_id, username, phone_number, email, contractor_id } = req.body;
+//   const { googleId, username, phoneNumber, email, contractorId } = req.body;
 
 //   query(
-//     'INSERT INTO users (google_id, username, phone_number, email, contractor_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-//     [google_id, username, phone_number, email, contractor_id],
+//     'INSERT INTO users (googleId, username, phoneNumber, email, contractorId) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+//     [googleId, username, phoneNumber, email, contractorId],
 //     (error, result) => {
 //       if (error) {
 //         throw error;
@@ -78,13 +78,13 @@ router.get('/:id', async (req, res) => {
 // router.post('/', async (req, res) => {
 //   try {
 //     const user = await query(
-//       'INSERT INTO users (google_id, username, phone_number, email, contractor_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+//       'INSERT INTO users (googleId, username, phoneNumber, email, contractorId) VALUES ($1, $2, $3, $4, $5) RETURNING *',
 //       [
-//         req.body.google_id,
+//         req.body.googleId,
 //         req.body.username,
-//         req.body.phone_number,
+//         req.body.phoneNumber,
 //         req.body.email,
-//         req.body_contractor_id,
+//         req.body.contractorId,
 //       ]
 //     );
 //     return res.json(user.rows[0]);
@@ -122,7 +122,7 @@ router.put('/', async (req, res) => {
     const promises = constructQueries(potentialKeys);
     await Promise.all(promises);
     const updatedUser = await query(
-      'SELECT id, username, phone_number, email, contractor_id, created_at FROM users WHERE id = $1',
+      'SELECT id, username, phoneNumber, email, contractorId, createdAt FROM users WHERE id = $1',
       [req.decoded.id]
     );
     return res.json({ user: updatedUser.rows[0] });
@@ -131,7 +131,7 @@ router.put('/', async (req, res) => {
       case '400':
         return res.status(400).json({
           error:
-            'Please indicate key to update (e.g. username, password, email, phone_number)',
+            'Please indicate key to update (e.g. username, password, email, phoneNumber)',
         });
       default:
         return res.status(500).json({
@@ -158,10 +158,10 @@ router.delete('/', async (req, res) => {
   try {
     const { id } = req.decoded;
     const user = await query(
-      'SELECT id, google_id, phone_number, email, contractor_id, created_at FROM users WHERE id = $1;',
+      'SELECT id, googleId, phoneNumber, email, contractorId, createdAt FROM users WHERE id = $1;',
       [id]
     );
-    const contractorId = user.rows[0].contractor_id;
+    const { contractorId } = user.rows[0];
     if (contractorId) {
       // Delete will cascade to users table
       await query(`DELETE FROM contractors WHERE id = $1`, [contractorId]);

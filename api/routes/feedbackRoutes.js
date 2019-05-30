@@ -7,7 +7,7 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const feedback = await query(
-      'SELECT * FROM feedback WHERE contractor_id = $1;',
+      'SELECT * FROM feedback WHERE contractorId = $1;',
       [id]
     );
     res.json({ feedback: feedback.rows });
@@ -23,9 +23,9 @@ router.post('/:id', async (req, res) => {
     const userId = req.decoded.id;
     if (!stars || !message) throw new Error(400);
     const feedback = await query(
-      `INSERT INTO feedback (user_id, contractor_id, stars, message)
+      `INSERT INTO feedback (userId, contractorId, stars, message)
       VALUES ($1, $2, $3, $4)
-      RETURNING id, user_id, contractor_id, stars, message, created_at`,
+      RETURNING id, userId, contractorId, stars, message, createdAt`,
       [userId, id, stars, message]
     );
     return res.status(201).json({ feedback: feedback.rows[0] });
