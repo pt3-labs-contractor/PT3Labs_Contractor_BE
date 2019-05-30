@@ -48,13 +48,25 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
+    const userId = req.decoded.id;
+    const user = await query(`SELECT * FROM users WHERE id = $1`, [userId]);
+    if (!user.rows[0].id) {
+      throw new Error(403);
+    }
     const schedule = await query(
       'INSERT * FROM schedules (contractor_id, start_time, duration) VALUES ($1, $2, $3) RETURNING *',
       [req.body.contractor_id, req.body.start_time, req.body.duration]
     );
     return res.json({ schedule: schedule.rows[0] });
   } catch (err) {
-    return err;
+    switch (err.message) {
+      case '403':
+        return res.status(403).json({ error: 'Forbidden' });
+      default:
+        return res
+          .status(500)
+          .json({ error: 'There was an error while adding to schedule.' });
+    }
   }
 });
 

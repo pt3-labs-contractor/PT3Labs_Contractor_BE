@@ -44,12 +44,12 @@ function createContractorsTable() {
 function createSchedulesTable() {
   return query(`
   CREATE TABLE IF NOT EXISTS schedules (
+    id UUID NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
     contractor_id UUID NOT NULL,
     start_time TIMESTAMPTZ NOT NULL,
     duration INTERVAL NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
     UNIQUE (contractor_id, start_time),
-    PRIMARY KEY (contractor_id, start_time),
     FOREIGN KEY (contractor_id) REFERENCES contractors(id)
     ON DELETE CASCADE
   );

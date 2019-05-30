@@ -8,15 +8,44 @@ const router = express.Router();
 
 router.post('/register', async (req, res) => {
   try {
-    const { username, password, phone_number, email } = req.body;
-    if ((!username || !password || !phone_number, !email)) throw new Error(400);
+    const {
+      username,
+      password,
+      phoneNumber,
+      email,
+      contractorName,
+      streetAddress,
+      city,
+      stateAbbr,
+      zipCode,
+    } = req.body;
+    if ((!username || !password || !phoneNumber, !email)) throw new Error(400);
     const hash = await bcrypt.hash(password, 12);
-    const user = await query(
-      `INSERT INTO users (username, password, phone_number, email)
+    let user;
+    if (contractorName) {
+      if (!streetAddress || !city || !stateAbbr || !zipCode)
+        throw new Error('contractor 400');
+      const contractor = await query(
+        `INSERT INTO contractors (name, phone_number, street_address, city, state_abbr, zip_code)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id;`,
+        [contractorName, phoneNumber, streetAddress, city, stateAbbr, zipCode]
+      );
+      user = await query(
+        `INSERT INTO users (username, password, phone_number, email, contractor_id)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING id, username, phone_number, email, contractor_id, created_at;
+        `,
+        [username, hash, phoneNumber, email, contractor.rows[0].id]
+      );
+    } else {
+      user = await query(
+        `INSERT INTO users (username, password, phone_number, email)
       VALUES ($1, $2, $3, $4)
       RETURNING id, username, phone_number, email, created_at;`,
-      [username, hash, phone_number, email]
-    );
+        [username, hash, phoneNumber, email]
+      );
+    }
     const token = jwt.sign({ id: user.rows[0].id }, process.env.JWT_SECRET, {
       expiresIn: '1d',
     });
@@ -27,6 +56,11 @@ router.post('/register', async (req, res) => {
         return res.status(400).json({
           error:
             'Request must includes values for username, password, phone_number, and email keys.',
+        });
+      case 'contractor 400':
+        return res.status(400).json({
+          error:
+            'New contractor must include values for street_address, city, state_abbr, and zip_code.',
         });
       default:
         return res

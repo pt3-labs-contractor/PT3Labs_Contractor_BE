@@ -109,13 +109,12 @@ router.put('/', async (req, res) => {
     return queries;
   }
   try {
-    // eslint-disable-next-line camelcase
-    const { username, password, email, phone_number } = req.body;
+    const { username, password, email, phoneNumber } = req.body;
     const potentialKeys = Object.entries({
       username,
       password,
       email,
-      phone_number,
+      phoneNumber,
     });
     if (potentialKeys.every(key => !key[1])) {
       throw new Error(400);
@@ -159,9 +158,16 @@ router.delete('/', async (req, res) => {
   try {
     const { id } = req.decoded;
     const user = await query(
-      'DELETE FROM users WHERE id = $1 RETURNING id, username, phone_number, email, contractor_id, created_at;',
+      'SELECT id, google_id, phone_number, email, contractor_id, created_at FROM users WHERE id = $1;',
       [id]
-    ); // May be contractor
+    );
+    const contractorId = user.rows[0].contractor_id;
+    if (contractorId) {
+      // Delete will cascade to users table
+      await query(`DELETE FROM contractors WHERE id = $1`, [contractorId]);
+    } else {
+      await query(`DELETE FROM users WHERE id = $1`, [user.rows[0].id]);
+    }
     return res.json({ deleted: user.rows[0] });
   } catch (err) {
     return res

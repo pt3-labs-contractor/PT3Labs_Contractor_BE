@@ -23,12 +23,15 @@ let token;
 beforeEach(async () => {
   const response = await request(server)
     .post('/api/auth/register')
-    .send(testUser);
+    .send({ ...testUser, ...testContractor });
+  console.log(response);
   ({ token } = response.body);
 });
 
 afterEach(async () => {
-  await query('DELETE FROM users WHERE username = $1', [testUser.username]);
+  await query(`DELETE FROM contractors WHERE name = $1;`, [
+    testContractor.name,
+  ]);
 });
 
 describe('User routes', () => {
@@ -37,6 +40,7 @@ describe('User routes', () => {
       .get('/api/users')
       .set('authorization', `Bearer ${token}`);
     expect(response.body.user.username).toBe(testUser.username);
+    expect(response.body.user.contractor_id).toBeTruthy();
   });
   it('Should allow user to update their information', async () => {
     const response = await request(server)
@@ -63,8 +67,7 @@ describe('User routes', () => {
     expect(get.status).toBe(401);
   });
   it('Should not display information for a non-authenticated user', async () => {
-    const response = await request(server)
-      .get('/api/users');
+    const response = await request(server).get('/api/users');
     expect(response.status).toBe(401);
     expect(response.body.error).toBeTruthy();
   });
@@ -79,8 +82,7 @@ describe('Contractor routes', () => {
     expect(Array.isArray(response.body.contractors)).toBeTruthy();
   });
   it('Should not display contractors for non-authenticated user', async () => {
-    const response = await request(server)
-      .get('/api/contractors');
+    const response = await request(server).get('/api/contractors');
     expect(response.status).toBe(401);
     expect(response.body.error).toBeTruthy();
   });
@@ -92,9 +94,9 @@ describe('Schedules routes', () => {
     const randomContractor = await query(`
       SELECT * FROM contractors ORDER BY RANDOM() LIMIT 1;
     `);
-    contractor = randomContractor.rows[0];
+    [contractor] = randomContractor.rows;
   });
-  it('Should display contractor\'s upcoming schedule when provided ID.', async () => {
+  it("Should display contractor's upcoming schedule when provided ID.", async () => {
     const response = await request(server)
       .get(`/api/schedules/${contractor.id}`)
       .set('authorization', `Bearer ${token}`);
