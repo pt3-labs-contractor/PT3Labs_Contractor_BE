@@ -19,17 +19,17 @@ passport.deserializeUser((id, done) => {
 passport.use(
   new GoogleStrategy(
     {
-      callbackURL: `${process.env.SITE_ORIGIN ||
-        'http://localhost:5000'}/api/auth/google/redirect`,
+      callbackURL: `/api/auth/google/redirect`,
       clientID: process.env.GOOGLE_ID,
       clientSecret: process.env.GOOGLE_SECRET,
       userProfileURL: 'https://www.googleapis.com/oauth2/v3/userinfo',
     },
     async (accessToken, refreshToken, profile, done) => {
       // Callback
-      const response = await query('SELECT * FROM users WHERE googleId = $1', [
-        profile.id,
-      ]);
+      const response = await query(
+        'SELECT * FROM users WHERE "googleId" = $1',
+        [profile.id]
+      );
       if (response.rows.length) {
         const token = jwt.sign(
           { id: response.rows[0].id },
@@ -40,9 +40,9 @@ passport.use(
         done(null, user);
       } else {
         const newEntry = await query(
-          `INSERT INTO users (googleId)
+          `INSERT INTO users ("googleId")
           VALUES ($1)
-          RETURNING id, googleId, username, phoneNumber, email, contractorId, createdAt`,
+          RETURNING id, "googleId", username, "phoneNumber", email, "contractorId", "createdAt"`,
           [profile.id]
         );
         const token = jwt.sign(

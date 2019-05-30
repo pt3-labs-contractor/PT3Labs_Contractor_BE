@@ -104,7 +104,9 @@ router.get(
 );
 
 router.get('/google/redirect', passport.authenticate('google'), (req, res) => {
-  res.redirect(`http://localhost:3000/redirect/${req.user.token}`);
+  res.redirect(
+    `https://affectionate-almeida-c22cb1.netlify.com/redirect/${req.user.token}`
+  );
 });
 
 module.exports = router;
