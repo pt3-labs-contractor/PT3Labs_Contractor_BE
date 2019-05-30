@@ -32,6 +32,26 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+router.get('/contractor/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const schedule = await query('SELECT * FROM schedules WHERE contractorId = $1', [id]);
+    if (!schedule.rows || !schedule.rows.length) {
+      throw new Error(404);
+    }
+    return res.json({ schedule: schedule.rows });
+  } catch (error) {
+    switch (error.message) {
+      case '404':
+        return res
+          .status(404)
+          .json({ error: 'No schedule found with that ID.' });
+      default:
+        return res.status(500).json({ error: error.message });
+    }
+  }
+});
+
 // Post as a callback
 // router.post('/', (req, res) => {
 //   query(
