@@ -19,7 +19,7 @@ router.post('/register', async (req, res) => {
       stateAbbr,
       zipCode,
     } = req.body;
-    if ((!username || !password || !phoneNumber, !email)) throw new Error(400);
+    if (!username || !password || !phoneNumber || !email) throw new Error(400);
     const hash = await bcrypt.hash(password, 12);
     let user;
     if (contractorName) {
