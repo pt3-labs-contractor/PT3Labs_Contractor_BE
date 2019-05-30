@@ -54,7 +54,7 @@ router.post('/', async (req, res) => {
       throw new Error(403);
     }
     const schedule = await query(
-      'INSERT * INTO schedules (contractorId, startTime, duration) VALUES ($1, $2, $3) RETURNING *',
+      'INSERT * INTO schedules ("contractorId", "startTime", duration) VALUES ($1, $2, $3) RETURNING *',
       [user.rows[0].contractorId, req.body.startTime, req.body.duration]
     );
     return res.json({ schedule: schedule.rows[0] });
@@ -80,7 +80,7 @@ router.put('/:id', async (req, res) => {
     if (user.rows[0].contractorId !== entry.rows[0].contractorId)
       throw new Error(403);
     const schedule = await query(
-      'UPDATE schedules SET contractorId = $1, startTime = $2, duration = $3 WHERE id = $4 RETURNING *;',
+      'UPDATE schedules SET "contractorId" = $1, "startTime" = $2, duration = $3 WHERE id = $4 RETURNING *;',
       [
         user.rows[0].contractorId,
         req.body.startTime,

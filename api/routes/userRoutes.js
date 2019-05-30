@@ -6,7 +6,7 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     const users = await query(
-      `SELECT id, username, phoneNumber, email, contractorId, createdAt FROM users
+      `SELECT id, username, "phoneNumber", email, "contractorId", "createdAt" FROM users
       WHERE id = $1`,
       [req.decoded.id]
     );
@@ -38,7 +38,7 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const user = await query(
-      'SELECT id, username, phoneNumber, email, contractorId, createdAt FROM users WHERE id = $1;',
+      'SELECT id, username, "phoneNumber", email, "contractorId", "createdAt" FROM users WHERE id = $1;',
       [id]
     );
     if (!user.rows || !user.rows[0]) {
@@ -122,7 +122,7 @@ router.put('/', async (req, res) => {
     const promises = constructQueries(potentialKeys);
     await Promise.all(promises);
     const updatedUser = await query(
-      'SELECT id, username, phoneNumber, email, contractorId, createdAt FROM users WHERE id = $1',
+      'SELECT id, username, "phoneNumber", email, "contractorId", "createdAt" FROM users WHERE id = $1',
       [req.decoded.id]
     );
     return res.json({ user: updatedUser.rows[0] });
@@ -158,7 +158,7 @@ router.delete('/', async (req, res) => {
   try {
     const { id } = req.decoded;
     const user = await query(
-      'SELECT id, googleId, phoneNumber, email, contractorId, createdAt FROM users WHERE id = $1;',
+      'SELECT id, "googleId", "phoneNumber", email, "contractorId", "createdAt" FROM users WHERE id = $1;',
       [id]
     );
     const { contractorId } = user.rows[0];

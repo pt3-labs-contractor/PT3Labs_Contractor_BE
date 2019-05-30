@@ -70,7 +70,7 @@ router.post('/', async (req, res) => {
     )
       throw new Error(400);
     const contractor = await query(
-      'INSERT INTO contractors (name, phoneNumber, streetAddress, city, stateAbbr, zipCode) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      'INSERT INTO contractors (name, "phoneNumber", "streetAddress", city, "stateAbbr", "zipCode") VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
       [contractorName, phoneNumber, streetAddress, city, stateAbbr, zipCode]
     );
     // await query(`UPDATE users SET contractorId = $1 WHERE id = $2;`, [
@@ -97,7 +97,7 @@ router.put('/:id', async (req, res) => {
   const { id } = req.params;
   try {
     const contractor = await query(
-      'UPDATE contractors SET name = $1, phoneNumber = $2, streetAddress = $3, city = $4, stateAbbr = $5, zipCode = $6 WHERE id= $7 RETURNING *',
+      'UPDATE contractors SET name = $1, "phoneNumber" = $2, "streetAddress" = $3, city = $4, "stateAbbr" = $5, "zipCode" = $6 WHERE id= $7 RETURNING *',
       [
         req.body.name,
         req.body.phoneNumber,

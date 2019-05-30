@@ -40,7 +40,7 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const userAppt = await query(
-      'INSERT INTO appointments (contractorId, userId, serviceId, appointmentDatetime, duration) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      'INSERT INTO appointments ("contractorId", "userId", "serviceId", "appointmentDatetime", duration) VALUES ($1, $2, $3, $4, $5) RETURNING *',
       [
         req.body.contractorId,
         req.decoded.id,
@@ -61,7 +61,7 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const userAppt = await query(
-      'UPDATE appointments SET contractorId = ($1), appointmentDatetime = ($2), duration = ($3) WHERE id = ($4) RETURNING *',
+      'UPDATE appointments SET "contractorId" = ($1), "appointmentDatetime" = ($2), duration = ($3) WHERE id = ($4) RETURNING *',
       [
         req.body.contractorId,
         req.body.appointmentDatetime,
@@ -83,7 +83,7 @@ router.delete('/:id', (req, res) => {
     if (err) {
       throw err;
     }
-    res.status(200).send(`apointments deleted with id: ${id}`);
+    res.status(200).send(`appointments deleted with id: ${id}`);
   });
 });
 
