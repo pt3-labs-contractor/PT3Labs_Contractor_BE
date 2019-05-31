@@ -35,7 +35,10 @@ router.get('/:id', async (req, res) => {
 router.get('/contractor/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const schedule = await query('SELECT * FROM schedules WHERE contractorId = $1', [id]);
+    const schedule = await query(
+      'SELECT * FROM schedules WHERE "contractorId" = $1',
+      [id]
+    );
     if (!schedule.rows || !schedule.rows.length) {
       throw new Error(404);
     }
