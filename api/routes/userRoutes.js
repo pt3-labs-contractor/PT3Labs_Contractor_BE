@@ -99,7 +99,7 @@ router.put('/', async (req, res) => {
     for (let i = 0; i < potentialKeys.length; i += 1) {
       if (potentialKeys[i][1]) {
         queries.push(
-          query(`UPDATE users SET ${potentialKeys[i][0]} = $1 WHERE id = $2`, [
+          query(`UPDATE users SET "${potentialKeys[i][0]}" = $1 WHERE id = $2`, [
             potentialKeys[i][1],
             req.decoded.id,
           ])
