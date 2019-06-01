@@ -104,8 +104,12 @@ router.get(
 );
 
 router.get('/google/redirect', passport.authenticate('google'), (req, res) => {
+  const registrationComplete =
+    req.user.username && req.user.email && req.user.phoneNumber;
   res.redirect(
-    `https://affectionate-almeida-c22cb1.netlify.com/redirect/${req.user.token}`
+    `https://affectionate-almeida-c22cb1.netlify.com/redirect?token=${
+      req.user.token
+    }${registrationComplete ? '&registrationComplete=true' : ''}`
   );
 });
 

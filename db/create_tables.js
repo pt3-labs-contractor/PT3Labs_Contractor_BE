@@ -99,6 +99,7 @@ function createAppointmentsTable() {
     "contractorId" UUID NOT NULL,
     "userId" UUID NOT NULL,
     "serviceId" UUID NOT NULL,
+    "scheduleId": UUID NOT NULL,
     "appointmentDatetime" TIMESTAMPTZ NOT NULL,
     duration INTERVAL NOT NULL,
     "createdAt" TIMESTAMP DEFAULT NOW(),
@@ -108,7 +109,9 @@ function createAppointmentsTable() {
     FOREIGN KEY ("userId") REFERENCES users(id)
     ON DELETE CASCADE,
     FOREIGN KEY ("serviceId") REFERENCES services(id)
-    ON DELETE SET NULL
+    ON DELETE SET NULL,
+    FOREIGN KEY ("scheduleId") REFERENCES schedules(id)
+    ON DELETE CASCADE
   );
   `);
 }
