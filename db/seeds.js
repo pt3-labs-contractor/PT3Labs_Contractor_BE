@@ -42,7 +42,7 @@ function deleteFromTables() {
 function contractorSeeds() {
   return new Promise(async resolve => {
     const promises = [];
-    for (let i = 0; i < 500; i += 1) {
+    for (let i = 0; i < 250; i += 1) {
       promises.push(
         query(
           `
@@ -90,7 +90,7 @@ function userSeeds() {
       );
     }
 
-    for (let i = 0; i < 500; i += 1) {
+    for (let i = 0; i < 250; i += 1) {
       promises.push(
         query(
           `
@@ -129,7 +129,7 @@ function scheduleSeeds() {
             `,
             [
               contractors.rows[i].id,
-              faker.date.between('2019-5-1', '2019-5-31'),
+              faker.date.between('2019-6-1', '2019-6-30'),
               `${faker.random.number({ min: 2, max: 5 })}h`,
             ]
           )
