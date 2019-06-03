@@ -7,11 +7,7 @@ const testUser = {
   password: 'TEST_PASSWORD',
   email: 'TEST_EMAIL@email.com',
   phoneNumber: '(555) 555-5555',
-};
-
-const testContractor = {
-  name: 'TEST_CONTRACTOR_INC',
-  phoneNumber: '(555) 555-5555',
+  contractorName: 'TEST_CONTRACTOR_INC',
   streetAddress: '123 TEST ST.',
   city: 'TEST_CITY',
   stateAbbr: 'TE',
@@ -32,6 +28,67 @@ afterEach(async () => {
   await query(`DELETE FROM contractors WHERE name = $1;`, [
     testContractor.name,
   ]);
+});
+
+describe('Auth routes', () => {
+  const newUser = {
+    username: 'NEW_USER',
+    password: 'NEW_PASSWORD',
+    email: 'NEW_EMAIL@NEW.COM',
+    phoneNumber: '(123) 456-7890',
+  };
+  const newContractor = { 
+    ...newUser, 
+    contractorName: 'NEW_CONTRACTOR', 
+    streetAddress: '123 Anywhere St.', 
+    city: 'Anywhere', 
+    stateAbbr: 'TE', 
+    zipCode: '00000' 
+  };
+  afterEach(async () => {
+    await query(`DELETE FROM contractors WHERE name = $1`, [newContractor.contractorName]);
+    await query(`DELETE FROM users WHERE username = $1`, [newUser.username]);
+  });
+  it('Should return token on user registration', async () => {
+    const response = await request(server)
+      .post('/api/auth/register')
+      .send(newUser);
+    expect(response.status).toBe(201);
+    expect(response.body.token).toBeTruthy();
+  });
+  it('Should return 400 BAD REQUEST when missing required keys in request body', async () => {
+    const { email, ...malformedUser } = newUser;
+    const response = await request(server)
+      .post('/api/auth/register')
+      .send(malformedUser);
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBeTruthy();
+  });
+  it('Should add and link contractor entry if contractor info is provided', async () => {
+    const response = await request(server)
+      .post('/api/auth/register')
+      .send(newContractor);
+    expect(response.status).toBe(201);
+    expect(response.body.token).toBeTruthy();
+  });
+  it('Should return 400 BAD REQUEST if incomplete contractor info is provided', async () => {
+    const { city, ...malformedContractor } = newContractor;
+    const response = await request(server)
+      .post('/api/auth/register')
+      .send(malformedContractor);
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBeTruthy();
+  });
+  it('Should return 400 BAD REQUEST if attempting to insert duplicate info', async () => {
+    await request(server)
+      .post('/api/auth/register')
+      .send(newContractor);
+    const response = await request(server)
+      .post('api/auth/register')
+      .send(newContractor);
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBeTruthy();
+  });
 });
 
 describe('User routes', () => {
@@ -89,18 +146,63 @@ describe('Contractor routes', () => {
 });
 
 describe('Schedules routes', () => {
-  let contractor;
-  beforeAll(async () => {
-    const randomContractor = await query(`
-      SELECT * FROM contractors ORDER BY RANDOM() LIMIT 1;
-    `);
-    [contractor] = randomContractor.rows;
-  });
   it("Should display contractor's upcoming schedule when provided ID.", async () => {
+    const user = await request(server)
+      .get('/api/users')
+      .set('authorization', `Bearer ${token}`);
     const response = await request(server)
-      .get(`/api/schedules/${contractor.id}`)
+      .get(`/api/schedules/${user.contractorId}`)
       .set('authorization', `Bearer ${token}`);
     expect(response.status).toBe(200);
     expect(Array.isArray(response.body.schedule)).toBeTruthy();
   });
+  it('Should allow contractor to post new availability block', async () => {
+    const availability = {
+      startTime: '2019-06-22 06:00:00 -6:00',
+      duration: '8h',
+    };
+    const response = await request(server)
+      .post('/api/schedules')
+      .send(availability)
+      .set('authorization', `Bearer ${token}`);
+    expect(response.status).toBe(201);
+    expect(Array.isArray(response.body.created)).toBeTruthy();
+  });
+  it('Should allow contractor to delete an availability block', async () => {
+    let id;
+    beforeAll(async () => {
+      const response = await request(server)
+        .post('/api/schedules')
+        .send({ startTime: '2042-04-22 04:00:00 -6:00', duration: '8h' })
+        .set('authorization', `Bearer ${token}`);
+      ({ id } = response.body.created);
+    });
+    const response = await request(server)
+      .delete(`/api/schedules/${id}`)
+      .set('authorization', `Bearer ${token}`);
+    expect(response.status).toBe(200);
+    expect(response.body.status).toBe('success');
+  });
+  it('Should allow contractor to update an availability block', async () => {
+    let id;
+    beforeAll(async () => {
+      const response = await request(server)
+        .post('/api/schedules')
+        .send({ startTime: '2042-04-23 04:00:00 -6:00', duration: '8h'})
+        .set('authorization', `Bearer ${token}`);
+      ({ id } = response.body.created);
+    });
+    afterAll(async () => {
+      const response = await request(server)
+        .delete(`/api/schedules/${id}`)
+        .set('authorization', `Bearer ${token}`);
+    });
+    const response = await request(server)
+      .put(`/api/schedules/${id}`)
+      .send({ startTime: '2042-04-23 04:00:00 -6:00', duration: '5h' })
+      .set('authorization', `Bearer ${token}`);
+    expect(response.status).toBe(200);
+    expect(response.body.duration).toBe('5h');
+  });
 });
+

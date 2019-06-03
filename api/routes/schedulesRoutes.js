@@ -80,7 +80,7 @@ router.post('/', async (req, res) => {
       'INSERT * INTO schedules ("contractorId", "startTime", duration) VALUES ($1, $2, $3) RETURNING *',
       [user.rows[0].contractorId, req.body.startTime, req.body.duration]
     );
-    return res.json({ schedule: schedule.rows[0] });
+    return res.json({ created: schedule.rows[0] });
   } catch (err) {
     switch (err.message) {
       case '403':
