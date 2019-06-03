@@ -52,8 +52,8 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const service = await query(
-      'INSERT INTO services (name, price, contractor_id) VALUES ($1, $2, $3) RETURNING *',
-      [req.body.name, req.body.price, req.body_contractor_id]
+      'INSERT INTO services (name, price, "contractorId") VALUES ($1, $2, $3) RETURNING *',
+      [req.body.name, req.body.price, req.body.contractorId]
     );
     return res.json(service.rows[0]);
   } catch (err) {
@@ -64,8 +64,8 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const service = await query(
-      'UPDATE services SET name = ($1), price = ($2), contractor_id = ($3) WHERE id = ($4) RETURNING *',
-      [req.body.phone_number, req.body.email, req.params.id]
+      'UPDATE services SET name = ($1), price = ($2), "contractorId" = ($3) WHERE id = ($4) RETURNING *',
+      [req.body.phoneNumber, req.body.email, req.params.id]
     );
     return res.json({ services: service.rows[0] });
   } catch (err) {
@@ -77,7 +77,7 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', (req, res) => {
   const { id } = req.params;
 
-  query('DELETE FROM services WHERE id = $1', [id], (error, result) => {
+  query('DELETE FROM services WHERE id = $1', [id], error => {
     if (error) {
       throw error;
     }

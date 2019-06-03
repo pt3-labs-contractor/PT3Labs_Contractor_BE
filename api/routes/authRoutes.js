@@ -8,15 +8,44 @@ const router = express.Router();
 
 router.post('/register', async (req, res) => {
   try {
-    const { username, password, phone_number, email } = req.body;
-    if ((!username || !password || !phone_number, !email)) throw new Error(400);
+    const {
+      username,
+      password,
+      phoneNumber,
+      email,
+      contractorName,
+      streetAddress,
+      city,
+      stateAbbr,
+      zipCode,
+    } = req.body;
+    if (!username || !password || !phoneNumber || !email) throw new Error(400);
     const hash = await bcrypt.hash(password, 12);
-    const user = await query(
-      `INSERT INTO users (username, password, phone_number, email)
+    let user;
+    if (contractorName) {
+      if (!streetAddress || !city || !stateAbbr || !zipCode)
+        throw new Error('contractor 400');
+      const contractor = await query(
+        `INSERT INTO contractors (name, "phoneNumber", "streetAddress", city, "stateAbbr", "zipCode")
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id;`,
+        [contractorName, phoneNumber, streetAddress, city, stateAbbr, zipCode]
+      );
+      user = await query(
+        `INSERT INTO users (username, password, "phoneNumber", email, "contractorId")
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING id, username, "phoneNumber", email, "contractorId", "createdAt";
+        `,
+        [username, hash, phoneNumber, email, contractor.rows[0].id]
+      );
+    } else {
+      user = await query(
+        `INSERT INTO users (username, password, "phoneNumber", email)
       VALUES ($1, $2, $3, $4)
-      RETURNING id, username, phone_number, email, created_at;`,
-      [username, hash, phone_number, email]
-    );
+      RETURNING id, username, "phoneNumber", email, "createdAt";`,
+        [username, hash, phoneNumber, email]
+      );
+    }
     const token = jwt.sign({ id: user.rows[0].id }, process.env.JWT_SECRET, {
       expiresIn: '1d',
     });
@@ -26,7 +55,12 @@ router.post('/register', async (req, res) => {
       case '400':
         return res.status(400).json({
           error:
-            'Request must includes values for username, password, phone_number, and email keys.',
+            'Request must includes values for username, password, phoneNumber, and email keys.',
+        });
+      case 'contractor 400':
+        return res.status(400).json({
+          error:
+            'New contractor must include values for streetAddress, city, stateAbbr, and zipCode.',
         });
       default:
         return res
@@ -70,8 +104,13 @@ router.get(
 );
 
 router.get('/google/redirect', passport.authenticate('google'), (req, res) => {
-  console.log('GOT THROUGH', req.user);
-  res.redirect(`http://localhost:3000/redirect/${req.user.token}`);
+  const registrationComplete =
+    req.user.username && req.user.email && req.user.phoneNumber;
+  res.redirect(
+    `https://affectionate-almeida-c22cb1.netlify.com/redirect?token=${
+      req.user.token
+    }${registrationComplete ? '&registrationComplete=true' : ''}`
+  );
 });
 
 module.exports = router;
