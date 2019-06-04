@@ -157,7 +157,7 @@ describe('Schedules routes', () => {
   });
   afterEach(async () => {
     await request(server)
-      .delete(`/api/schedules/${scheduleId}`)
+      .del(`/api/schedules/${scheduleId}`)
       .set('authorization', `Bearer ${token}`);
   });
   it("Should display contractor's upcoming schedule when provided ID.", async () => {
@@ -185,7 +185,7 @@ describe('Schedules routes', () => {
   it('Should allow contractor to update an availability block', async () => {
     afterAll(async () => {
       await request(server)
-        .delete(`/api/schedules/${scheduleId}`)
+        .del(`/api/schedules/${scheduleId}`)
         .set('authorization', `Bearer ${token}`);
     });
     const response = await request(server)
@@ -197,7 +197,7 @@ describe('Schedules routes', () => {
   });
   it('Should allow contractor to delete an availability block', async () => {
     const response = await request(server)
-      .delete(`/api/schedules/${scheduleId}`)
+      .del(`/api/schedules/${scheduleId}`)
       .set('authorization', `Bearer ${token}`);
     expect(response.status).toBe(200);
     expect(response.body.status).toBe('success');
@@ -238,5 +238,16 @@ describe('Services routes', () => {
       .set('authorization', `Bearer ${token}`);
     expect(response.status).toBe(200);
     expect(response.body.updated.price).toBe('$30.00');
+  });
+  it('Should allow contractor to delete a service', async () => {
+    const service = await request(server)
+      .post('/api/services')
+      .send(testService)
+      .set('authorization', `Bearer ${token}`);
+    const response = await request(server)
+      .del(`/api/services/${service.body.created.id}`)
+      .set('authorization', `Bearer ${token}`);
+    expect(response.status).toBe(200);
+    expect(response.body.deleted).toBeTruthy();
   });
 });
