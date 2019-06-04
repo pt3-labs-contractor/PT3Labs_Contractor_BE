@@ -39,7 +39,7 @@ router.get('/contractor/:id', async (req, res) => {
       'SELECT * FROM schedules WHERE "contractorId" = $1',
       [id]
     );
-    if (!schedule.rows || !schedule.rows.length) {
+    if (!schedule.rows) {
       throw new Error(404);
     }
     return res.json({ schedule: schedule.rows });
@@ -77,10 +77,10 @@ router.post('/', async (req, res) => {
       throw new Error(403);
     }
     const schedule = await query(
-      'INSERT * INTO schedules ("contractorId", "startTime", duration) VALUES ($1, $2, $3) RETURNING *',
+      'INSERT INTO schedules ("contractorId", "startTime", duration) VALUES ($1, $2, $3) RETURNING *',
       [user.rows[0].contractorId, req.body.startTime, req.body.duration]
     );
-    return res.json({ created: schedule.rows[0] });
+    return res.status(201).json({ created: schedule.rows[0] });
   } catch (err) {
     switch (err.message) {
       case '403':
@@ -111,7 +111,7 @@ router.put('/:id', async (req, res) => {
         req.params.id,
       ]
     );
-    return res.json({ row: schedule.rows[0] });
+    return res.json({ updated: schedule.rows[0] });
   } catch (err) {
     switch (err.message) {
       case '403':

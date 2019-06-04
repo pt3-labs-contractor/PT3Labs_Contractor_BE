@@ -19,14 +19,13 @@ let token;
 beforeEach(async () => {
   const response = await request(server)
     .post('/api/auth/register')
-    .send({ ...testUser, ...testContractor });
-  console.log(response);
+    .send({ ...testUser });
   ({ token } = response.body);
 });
 
 afterEach(async () => {
   await query(`DELETE FROM contractors WHERE name = $1;`, [
-    testContractor.name,
+    testUser.contractorName,
   ]);
 });
 
@@ -37,16 +36,18 @@ describe('Auth routes', () => {
     email: 'NEW_EMAIL@NEW.COM',
     phoneNumber: '(123) 456-7890',
   };
-  const newContractor = { 
-    ...newUser, 
-    contractorName: 'NEW_CONTRACTOR', 
-    streetAddress: '123 Anywhere St.', 
-    city: 'Anywhere', 
-    stateAbbr: 'TE', 
-    zipCode: '00000' 
+  const newContractor = {
+    ...newUser,
+    contractorName: 'NEW_CONTRACTOR',
+    streetAddress: '123 Anywhere St.',
+    city: 'Anywhere',
+    stateAbbr: 'TE',
+    zipCode: '00000',
   };
   afterEach(async () => {
-    await query(`DELETE FROM contractors WHERE name = $1`, [newContractor.contractorName]);
+    await query(`DELETE FROM contractors WHERE name = $1`, [
+      newContractor.contractorName,
+    ]);
     await query(`DELETE FROM users WHERE username = $1`, [newUser.username]);
   });
   it('Should return token on user registration', async () => {
@@ -84,7 +85,7 @@ describe('Auth routes', () => {
       .post('/api/auth/register')
       .send(newContractor);
     const response = await request(server)
-      .post('api/auth/register')
+      .post('/api/auth/register')
       .send(newContractor);
     expect(response.status).toBe(400);
     expect(response.body.error).toBeTruthy();
@@ -146,12 +147,25 @@ describe('Contractor routes', () => {
 });
 
 describe('Schedules routes', () => {
+  let scheduleId;
+  beforeEach(async () => {
+    const response = await request(server)
+      .post('/api/schedules')
+      .send({ startTime: '2042-04-22 04:00:00 -6:00', duration: '8h' })
+      .set('authorization', `Bearer ${token}`);
+    scheduleId = response.body.created.id;
+  });
+  afterEach(async () => {
+    await request(server)
+      .delete(`/api/schedules/${scheduleId}`)
+      .set('authorization', `Bearer ${token}`);
+  });
   it("Should display contractor's upcoming schedule when provided ID.", async () => {
     const user = await request(server)
       .get('/api/users')
       .set('authorization', `Bearer ${token}`);
     const response = await request(server)
-      .get(`/api/schedules/${user.contractorId}`)
+      .get(`/api/schedules/contractor/${user.body.user.contractorId}`)
       .set('authorization', `Bearer ${token}`);
     expect(response.status).toBe(200);
     expect(Array.isArray(response.body.schedule)).toBeTruthy();
@@ -166,43 +180,63 @@ describe('Schedules routes', () => {
       .send(availability)
       .set('authorization', `Bearer ${token}`);
     expect(response.status).toBe(201);
-    expect(Array.isArray(response.body.created)).toBeTruthy();
+    expect(response.body.created).toBeTruthy();
   });
-  it('Should allow contractor to delete an availability block', async () => {
-    let id;
-    beforeAll(async () => {
-      const response = await request(server)
-        .post('/api/schedules')
-        .send({ startTime: '2042-04-22 04:00:00 -6:00', duration: '8h' })
+  it('Should allow contractor to update an availability block', async () => {
+    afterAll(async () => {
+      await request(server)
+        .delete(`/api/schedules/${scheduleId}`)
         .set('authorization', `Bearer ${token}`);
-      ({ id } = response.body.created);
     });
     const response = await request(server)
-      .delete(`/api/schedules/${id}`)
+      .put(`/api/schedules/${scheduleId}`)
+      .send({ startTime: '2042-04-23 04:00:00 -6:00', duration: '5h' })
+      .set('authorization', `Bearer ${token}`);
+    expect(response.status).toBe(200);
+    expect(response.body.updated.duration).toEqual({ hours: 5 });
+  });
+  it('Should allow contractor to delete an availability block', async () => {
+    const response = await request(server)
+      .delete(`/api/schedules/${scheduleId}`)
       .set('authorization', `Bearer ${token}`);
     expect(response.status).toBe(200);
     expect(response.body.status).toBe('success');
   });
-  it('Should allow contractor to update an availability block', async () => {
-    let id;
-    beforeAll(async () => {
-      const response = await request(server)
-        .post('/api/schedules')
-        .send({ startTime: '2042-04-23 04:00:00 -6:00', duration: '8h'})
-        .set('authorization', `Bearer ${token}`);
-      ({ id } = response.body.created);
-    });
-    afterAll(async () => {
-      const response = await request(server)
-        .delete(`/api/schedules/${id}`)
-        .set('authorization', `Bearer ${token}`);
-    });
-    const response = await request(server)
-      .put(`/api/schedules/${id}`)
-      .send({ startTime: '2042-04-23 04:00:00 -6:00', duration: '5h' })
-      .set('authorization', `Bearer ${token}`);
-    expect(response.status).toBe(200);
-    expect(response.body.duration).toBe('5h');
-  });
 });
 
+describe('Services routes', () => {
+  const testService = { name: 'TEST_SERVICE', price: '$20.00' };
+  afterEach(async () => {
+    await query('DELETE FROM services WHERE name = $1', [testService.name]);
+  });
+  it('Should allow user to pull list of services based on contractorId', async () => {
+    const user = await request(server)
+      .get('/api/users')
+      .set('authorization', `Bearer ${token}`);
+    const response = await request(server)
+      .get(`/api/services/contractor/${user.body.user.contractorId}`)
+      .set('authorization', `Bearer ${token}`);
+    expect(response.status).toBe(200);
+    expect(Array.isArray(response.body.services)).toBeTruthy();
+  });
+  it('Should allow contractor to add new services', async () => {
+    const response = await request(server)
+      .post('/api/services')
+      .send(testService)
+      .set('authorization', `Bearer ${token}`);
+    expect(response.status).toBe(201);
+    expect(response.body.created.name).toBe('TEST_SERVICE');
+  });
+  it('Should allow contractor to edit services', async () => {
+    const service = await request(server)
+      .post('/api/services')
+      .send(testService)
+      .set('authorization', `Bearer ${token}`);
+    const response = await request(server)
+      .put(`/api/services/${service.body.created.id}`)
+      .send({ name: 'TEST_SERVICE', price: '$30.00' })
+      .set('authorization', `Bearer ${token}`);
+    expect(response.status).toBe(200);
+    expect(response.body.updated.price).toBe('$30.00');
+  });
+});

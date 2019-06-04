@@ -102,6 +102,7 @@ function createAppointmentsTable() {
     "scheduleId": UUID NOT NULL,
     "appointmentDatetime" TIMESTAMPTZ NOT NULL,
     duration INTERVAL NOT NULL,
+    confirmed BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP DEFAULT NOW(),
     UNIQUE("contractorId", "userId", "serviceId", "appointmentDatetime"),
     FOREIGN KEY ("contractorId") REFERENCES contractors(id)
