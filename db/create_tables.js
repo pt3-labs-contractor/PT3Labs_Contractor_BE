@@ -99,7 +99,7 @@ function createAppointmentsTable() {
     "contractorId" UUID NOT NULL,
     "userId" UUID NOT NULL,
     "serviceId" UUID NOT NULL,
-    "scheduleId": UUID NOT NULL,
+    "scheduleId" UUID NOT NULL,
     "appointmentDatetime" TIMESTAMPTZ NOT NULL,
     duration INTERVAL NOT NULL,
     confirmed BOOLEAN NOT NULL DEFAULT false,
