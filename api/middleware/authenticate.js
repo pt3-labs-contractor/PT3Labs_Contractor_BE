@@ -1,9 +1,14 @@
 const jwt = require('jsonwebtoken');
+const { query } = require('../../db');
 
-function authenticate(req, res, next) {
+async function authenticate(req, res, next) {
   try {
     const token = req.headers.authorization.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await query('SELECT * FROM users WHERE id = $1', [decoded.id]);
+    if (!user.rows || !user.rows.length) {
+      throw new Error();
+    }
     req.decoded = decoded;
     next();
   } catch (err) {

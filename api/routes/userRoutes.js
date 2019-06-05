@@ -99,10 +99,10 @@ router.put('/', async (req, res) => {
     for (let i = 0; i < potentialKeys.length; i += 1) {
       if (potentialKeys[i][1]) {
         queries.push(
-          query(`UPDATE users SET "${potentialKeys[i][0]}" = $1 WHERE id = $2`, [
-            potentialKeys[i][1],
-            req.decoded.id,
-          ])
+          query(
+            `UPDATE users SET "${potentialKeys[i][0]}" = $1 WHERE id = $2`,
+            [potentialKeys[i][1], req.decoded.id]
+          )
         );
       }
     }
@@ -158,7 +158,7 @@ router.delete('/', async (req, res) => {
   try {
     const { id } = req.decoded;
     const user = await query(
-      'SELECT id, "googleId", "phoneNumber", email, "contractorId", "createdAt" FROM users WHERE id = $1;',
+      'SELECT id, "username", "phoneNumber", email, "contractorId", "createdAt" FROM users WHERE id = $1;',
       [id]
     );
     const { contractorId } = user.rows[0];
