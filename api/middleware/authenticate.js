@@ -9,7 +9,8 @@ async function authenticate(req, res, next) {
     if (!user.rows || !user.rows[0]) {
       throw new Error();
     }
-    req.user = user.rows[0];
+    const { password, ...withoutPassword } = user.rows[0];
+    req.user = withoutPassword;
     next();
   } catch (err) {
     res.status(401).json({ error: 'Unauthorized' });

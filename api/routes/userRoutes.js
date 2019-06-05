@@ -5,8 +5,7 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const { password, ...withoutPassword } = req.user;
-    return res.json({ user: withoutPassword });
+    return res.json({ user: req.user });
   } catch (err) {
       return res
         .status(500)
@@ -146,14 +145,13 @@ router.put('/', async (req, res) => {
 router.delete('/', async (req, res) => {
   try {
     const { user } = req;
-    const { password, ...withoutPassword } = user;
     if (user.contractorId) {
       // Delete will cascade to users table
       await query(`DELETE FROM contractors WHERE id = $1`, [user.contractorId]);
     } else {
       await query(`DELETE FROM users WHERE id = $1`, [user.id]);
     }
-    return res.json({ deleted: withoutPassword });
+    return res.json({ deleted: user });
   } catch (err) {
     return res
       .status(500)

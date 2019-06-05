@@ -5,15 +5,6 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const appointments = await query(`SELECT * FROM appointments;`);
-    return res.json({ appointments: appointments.rows });
-  } catch (error) {
-    return res.status(500).json({ error: error.message });
-  }
-});
-
-router.get('/:id', async (req, res) => {
-  try {
     const user = req.user
     const isContractor = user.contractorId;
     const attribute = user.contractorId ? 'contractorId' : 'userId';
@@ -32,6 +23,35 @@ router.get('/:id', async (req, res) => {
     }
   }
 });
+
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const appointments = await query('SELECT * FROM appointments WHERE id = $1', [id]);
+    if (!appointments.rows || !appointments.rows[0]) throw new Error(404);
+    return res.json({ appointment: appointments.rows[0] });
+  } catch(err){
+    switch(err.message){
+      case '404':
+        return res.status(404).json({ error: 'No appointment with that ID found.' });
+      default:
+        return res.status(500).json({ error: 'There was an error while retrieving appointment.' });
+    }
+  }
+});
+
+router.get('/contractors/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const appointments = await query('SELECT * FROM appointments WHERE contractorId = $1', [id]);
+    if (!appointments.rows) throw new Error();
+    return res.json({ appointments: appointments.rows });
+  } catch(err){
+    return res.status(500).json({ error: 'There was an error while retrieving appointments.' });
+  }
+});
+
+// User, contractor, or both allowed to add/edit/delete?
 
 router.post('/', async (req, res) => {
   try {
