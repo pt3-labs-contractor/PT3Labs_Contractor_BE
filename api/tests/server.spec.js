@@ -132,7 +132,7 @@ describe('User routes', () => {
 });
 
 describe('Contractor routes', () => {
-  it('Should display list of contractors on GET', async () => {
+  it('Should display array of contractors on GET', async () => {
     const response = await request(server)
       .get('/api/contractors')
       .set('authorization', `Bearer ${token}`);
@@ -209,7 +209,7 @@ describe('Services routes', () => {
   afterEach(async () => {
     await query('DELETE FROM services WHERE name = $1', [testService.name]);
   });
-  it('Should allow user to pull list of services based on contractorId', async () => {
+  it('Should allow user to pull array of services based on contractorId', async () => {
     const user = await request(server)
       .get('/api/users')
       .set('authorization', `Bearer ${token}`);
@@ -249,5 +249,29 @@ describe('Services routes', () => {
       .set('authorization', `Bearer ${token}`);
     expect(response.status).toBe(200);
     expect(response.body.deleted).toBeTruthy();
+  });
+});
+
+describe('appointment routes', () => {
+  let user;
+  beforeAll(async () => {
+    const response = await request(server)
+      .get('/api/users')
+      .set('authorization', `Bearer ${token}`);
+    ({ user } = response.body);
+  });
+  it('Should return array of appointments', async () => {
+    const response = await request(server)
+      .get('/api/appointments')
+      .set('authorization', `Bearer ${token}`);
+    expect(response.status).toBe(200);
+    expect(Array.isArray(response.body.appointments)).toByTruthy();
+  });
+  it('Should return array of appointments for contractor', async () => {
+    const response = await request(server)
+      .get(`/api/appointments/contractors/${user.contractorId}`)
+      .set('authorization', `Bearer ${token}`);
+    expect(response.status).toBe(200);
+    expect(Array.isArray(response.body.appointments)).toBeTruthy();
   });
 });
