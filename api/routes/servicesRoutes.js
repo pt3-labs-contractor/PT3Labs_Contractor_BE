@@ -67,20 +67,21 @@ router.get('/contractor/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { id } = req.decoded;
-    const user = await query('SELECT "contractorId" FROM users WHERE id = $1', [
-      id,
-    ]);
-    if (!user.rows[0].contractorId) {
-      throw new Error(403);
-    }
+    const { name, price } = req.body;
+    if (!name) throw new Error(400);
+    const {user} = req;
+    if (!user.contractorId) throw new Error(403);
+    const values = [name, user.contractorId];
+    if (price) values.push(price);
     const service = await query(
-      'INSERT INTO services (name, price, "contractorId") VALUES ($1, $2, $3) RETURNING *',
-      [req.body.name, req.body.price, user.rows[0].contractorId]
+      `INSERT INTO services (name, "contractorId"${price?', price':''}) VALUES ($1, $2${price?', $3':''}) RETURNING *`,
+      values
     );
     return res.status(201).json({ created: service.rows[0] });
   } catch (err) {
     switch (err.message) {
+      case '400':
+        return res.status(400).json({ error: 'Request must include value for "name" key.' });
       case '403':
         return res
           .status(403)
@@ -96,23 +97,25 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await query('SELECT "contractorId" FROM users WHERE id = $1', [
-      req.decoded.id,
-    ]);
+    const { name, price } = req.body;
+    const {user} = req;
+    if (!name || !price) throw new Error(400);
     const service = await query('SELECT * FROM services WHERE id = $1', [id]);
     if (!service.rows || !service.rows[0]) {
       throw new Error(404);
     }
-    if (service.rows[0].contractorId !== user.rows[0].contractorId) {
+    if (service.rows[0].contractorId !== user.contractorId) {
       throw new Error(403);
     }
     const updated = await query(
       'UPDATE services SET name = $1, price = $2, "contractorId" = $3 WHERE id = $4 RETURNING *',
-      [req.body.name, req.body.price, user.rows[0].contractorId, id]
+      [name, price, user.contractorId, id]
     );
     return res.json({ updated: updated.rows[0] });
   } catch (err) {
     switch (err.message) {
+      case '400':
+        return res.status(400).json({ error: 'Request must include desired values for "name" or "price" key.' });
       case '403':
         return res.status(403).json({ error: 'Forbidden' });
       case '404':
@@ -129,14 +132,12 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await query('SELECT "contractorId" from users WHERE id = $1', [
-      req.decoded.id,
-    ]);
+    const { user } = req;
     const service = await query('SELECT * from services WHERE id = $1', [id]);
     if (!service.rows || !service.rows[0]) {
       throw new Error(404);
     }
-    if (user.rows[0].contractorId !== service.rows[0].contractorId) {
+    if (user.contractorId !== service.rows[0].contractorId) {
       throw new Error(403);
     }
     await query('DELETE FROM services WHERE id = $1', [id]);

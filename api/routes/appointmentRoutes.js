@@ -14,16 +14,12 @@ router.get('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
-    const { id } = req.params;
-    const user = await query('SELECT * FROM appointments WHERE id = $1', [id]);
-    if (!user.rows || !user.rows.length) {
-      throw new Error(404);
-    }
-    const isContractor = user.rows[0].contractorId;
-    const attribute = isContractor ? 'contractorId' : 'userId';
-    const value = isContractor || user.rows[0].id;
+    const user = req.user
+    const isContractor = user.contractorId;
+    const attribute = user.contractorId ? 'contractorId' : 'userId';
+    const value = isContractor || user.id;
     const appointments = await query(
-      `SELECT * FROM appointments WHERE ${attribute} = $1`, // attribute will only ever be defined by server, no risk of injection.
+      `SELECT * FROM appointments WHERE "${attribute}" = $1`, // attribute will only ever be defined by server, no risk of injection.
       [value]
     );
     return res.json({ appointments: appointments.rows });
@@ -43,7 +39,7 @@ router.post('/', async (req, res) => {
       'INSERT INTO appointments ("contractorId", "userId", "serviceId", "appointmentDatetime", duration) VALUES ($1, $2, $3, $4, $5) RETURNING *',
       [
         req.body.contractorId,
-        req.decoded.id,
+        req.user.id,
         req.body.serviceId,
         req.body.apointmentDatetime,
         req.body.duration,
