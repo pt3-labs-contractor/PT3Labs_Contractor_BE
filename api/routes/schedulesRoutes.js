@@ -39,7 +39,7 @@ router.get('/contractor/:id', async (req, res) => {
       'SELECT * FROM schedules WHERE "contractorId" = $1',
       [id]
     );
-    if (!schedule.rows || !schedule.rows.length) {
+    if (!schedule.rows) {
       throw new Error(404);
     }
     return res.json({ schedule: schedule.rows });
@@ -71,16 +71,13 @@ router.get('/contractor/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const userId = req.decoded.id;
-    const user = await query(`SELECT * FROM users WHERE id = $1`, [userId]);
-    if (!user.rows[0].id || !user.rows[0].contractorId) {
-      throw new Error(403);
-    }
+    const {user} = req;
+    if (!user.contractorId) throw new Error(403);
     const schedule = await query(
-      'INSERT * INTO schedules ("contractorId", "startTime", duration) VALUES ($1, $2, $3) RETURNING *',
-      [user.rows[0].contractorId, req.body.startTime, req.body.duration]
+      'INSERT INTO schedules ("contractorId", "startTime", duration) VALUES ($1, $2, $3) RETURNING *',
+      [user.contractorId, req.body.startTime, req.body.duration]
     );
-    return res.json({ schedule: schedule.rows[0] });
+    return res.status(201).json({ created: schedule.rows[0] });
   } catch (err) {
     switch (err.message) {
       case '403':
@@ -96,22 +93,21 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.decoded.id;
-    const entry = await query('SELECT * FROM schedules WHERE id = $1', [id]);
-    const user = await query('SELECT * FROM users WHERE id = $1', [userId]);
+    const {user} = req;
+    const entry = await query('SELECT "contractorId" FROM schedules WHERE id = $1', [id]);
     if (!entry.rows || !entry.rows[0]) throw new Error(404);
-    if (user.rows[0].contractorId !== entry.rows[0].contractorId)
+    if (user.contractorId !== entry.rows[0].contractorId)
       throw new Error(403);
     const schedule = await query(
       'UPDATE schedules SET "contractorId" = $1, "startTime" = $2, duration = $3 WHERE id = $4 RETURNING *;',
       [
-        user.rows[0].contractorId,
+        user.contractorId,
         req.body.startTime,
         req.body.duration,
-        req.params.id,
+        id,
       ]
     );
-    return res.json({ row: schedule.rows[0] });
+    return res.json({ updated: schedule.rows[0] });
   } catch (err) {
     switch (err.message) {
       case '403':
@@ -141,18 +137,25 @@ router.put('/:id', async (req, res) => {
 // });
 
 // As a promise
-router.delete('/:id', (req, res) => {
-  const { id } = req.params;
-  query('DELETE FROM schedules where id = $1', [id])
-    .then(result => {
-      res.status(200).json({
-        status: 'success',
-        message: `Removed ${result.rows[0]} from schedule`,
-      });
-    })
-    .catch(err => {
-      return err;
-    });
-});
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {user} = req;
+    const entry = await query('SELECT * FROM schedules WHERE id = $1', [id]);
+    if (!entry.rows || !entry.rows[0]) throw new Error(404);
+    if (user.contractorId !== entry.rows[0].contractorId) throw new Error(403);
+    await query('DELETE FROM schedules WHERE id = $1', [id]);
+    return res.json({ deleted: entry.rows[0] });
+  } catch(err) {
+    switch(err.message){
+      case '403':
+        return res.status(403).json({ error: 'Forbidden' });
+      case '404':
+        return res.status(404).json({ error: 'No entry found by that ID.' });
+      default:
+        return res.status(500).json({ error: 'There was an error while attempting to delete entry.' });
+    }
+  }
+  });
 
 module.exports = router;

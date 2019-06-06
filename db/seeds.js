@@ -192,13 +192,15 @@ function appointmentSeeds() {
         schedules.rows[i].contractorId,
         user.id,
         services[randomServiceIndex].id,
+        schedules.rows[i].id,
         timestamp,
         `${faker.random.number({ min: 60, max: 120 })}m`,
+        'true',
       ];
       promises.push(
         query(
-          `INSERT INTO appointments("contractorId", "userId", "serviceId", "appointmentDatetime", duration)
-            VALUES ($1, $2, $3, $4, $5)`,
+          `INSERT INTO appointments("contractorId", "userId", "serviceId", "scheduleId", "appointmentDatetime", duration, confirmed)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)`,
           values
         )
       );

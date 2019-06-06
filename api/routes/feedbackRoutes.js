@@ -20,7 +20,7 @@ router.post('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { stars, message } = req.body;
-    const userId = req.decoded.id;
+    const userId = req.user.id;
     if (!stars || !message) throw new Error(400);
     const feedback = await query(
       `INSERT INTO feedback ("userId", "contractorId", stars, message)
