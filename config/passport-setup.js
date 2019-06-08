@@ -26,6 +26,7 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
+        // eslint-disable-next-line no-underscore-dangle
         const { email } = profile._json;
         // Callback
         const response = await query(
@@ -39,28 +40,27 @@ passport.use(
             { expiresIn: '1d' }
           );
           const user = { ...response.rows[0], token };
-          done(null, user);
-        } else {
-          const emailCheck = await query(
-            'SELECT email FROM users WHERE email = $1',
-            [email]
-          );
-          if (emailCheck.rows && emailCheck.rows[0])
-            throw new Error('existing email');
-          const newEntry = await query(
-            `INSERT INTO users ("googleId", email)
-          VALUES ($1, $2)
-          RETURNING id, "googleId", username, "phoneNumber", email, "contractorId", "createdAt"`,
-            [profile.id, email]
-          );
-          const token = jwt.sign(
-            { id: newEntry.rows[0].id },
-            process.env.JWT_SECRET,
-            { expiresIn: '1d' }
-          );
-          const user = { ...newEntry.rows[0], token };
-          done(null, user);
+          return done(null, user);
         }
+        const emailCheck = await query(
+          'SELECT email FROM users WHERE email = $1',
+          [email]
+        );
+        if (emailCheck.rows && emailCheck.rows[0])
+          throw new Error('existing email');
+        const newEntry = await query(
+          `INSERT INTO users ("googleId", email)
+        VALUES ($1, $2)
+        RETURNING id, "googleId", username, "phoneNumber", email, "contractorId", "createdAt"`,
+          [profile.id, email]
+        );
+        const token = jwt.sign(
+          { id: newEntry.rows[0].id },
+          process.env.JWT_SECRET,
+          { expiresIn: '1d' }
+        );
+        const user = { ...newEntry.rows[0], token };
+        return done(null, user);
       } catch (err) {
         switch (err.message) {
           case 'existing email':
