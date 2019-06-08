@@ -25,33 +25,49 @@ passport.use(
       userProfileURL: 'https://www.googleapis.com/oauth2/v3/userinfo',
     },
     async (accessToken, refreshToken, profile, done) => {
-      // Callback
-      const response = await query(
-        'SELECT * FROM users WHERE "googleId" = $1',
-        [profile.id]
-      );
-      if (response.rows.length) {
-        const token = jwt.sign(
-          { id: response.rows[0].id },
-          process.env.JWT_SECRET,
-          { expiresIn: '1d' }
-        );
-        const user = { ...response.rows[0], token };
-        done(null, user);
-      } else {
-        const newEntry = await query(
-          `INSERT INTO users ("googleId")
-          VALUES ($1)
-          RETURNING id, "googleId", username, "phoneNumber", email, "contractorId", "createdAt"`,
+      try {
+        const { email } = profile._json;
+        // Callback
+        const response = await query(
+          'SELECT * FROM users WHERE "googleId" = $1',
           [profile.id]
         );
-        const token = jwt.sign(
-          { id: newEntry.rows[0].id },
-          process.env.JWT_SECRET,
-          { expiresIn: '1d' }
-        );
-        const user = { ...newEntry.rows[0], token };
-        done(null, user);
+        if (response.rows.length) {
+          const token = jwt.sign(
+            { id: response.rows[0].id },
+            process.env.JWT_SECRET,
+            { expiresIn: '1d' }
+          );
+          const user = { ...response.rows[0], token };
+          done(null, user);
+        } else {
+          const emailCheck = await query(
+            'SELECT * FROM users WHERE email = $1',
+            [email]
+          );
+          if (emailCheck.rows && emailCheck.rows[0])
+            throw new Error('existing email');
+          const newEntry = await query(
+            `INSERT INTO users ("googleId", email)
+          VALUES ($1, $2)
+          RETURNING id, "googleId", username, "phoneNumber", email, "contractorId", "createdAt"`,
+            [profile.id, email]
+          );
+          const token = jwt.sign(
+            { id: newEntry.rows[0].id },
+            process.env.JWT_SECRET,
+            { expiresIn: '1d' }
+          );
+          const user = { ...newEntry.rows[0], token };
+          done(null, user);
+        }
+      } catch (err) {
+        switch (err.message) {
+          case 'existing email':
+            return done(null, { id: -1, error: 'existing email' });
+          default:
+            return done(null, { id: -1, error: 'error' });
+        }
       }
     }
   )

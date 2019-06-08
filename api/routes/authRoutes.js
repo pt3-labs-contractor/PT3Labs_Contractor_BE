@@ -109,9 +109,21 @@ router.get(
 );
 
 router.get('/google/redirect', passport.authenticate('google'), (req, res) => {
+  if (req.user.error) {
+    switch (req.user.error) {
+      case 'existing email':
+        return res.redirect(
+          'https://affectionate-almeida-c22cb1.netlify.com/redirect?existing=true'
+        );
+      default:
+        return res.redirect(
+          'https://affectionate-almeida-c22cb1.netlify.com/redirect?error=true'
+        );
+    }
+  }
   const registrationComplete =
     req.user.username && req.user.email && req.user.phoneNumber;
-  res.redirect(
+  return res.redirect(
     `https://affectionate-almeida-c22cb1.netlify.com/redirect?token=${
       req.user.token
     }${registrationComplete ? '&registrationComplete=true' : ''}`
