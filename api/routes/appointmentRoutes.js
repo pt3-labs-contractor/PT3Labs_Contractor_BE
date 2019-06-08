@@ -63,7 +63,7 @@ router.get('/users/:id', async (req, res) => {
     const { id } = req.params;
     if (req.user.id !== id) throw new Error(403);
     const appointments = await query(
-      'SELECT * FROM appointments WHERE userId = $1',
+      'SELECT * FROM appointments WHERE "userId" = $1',
       [id]
     );
     if (!appointments.rows) throw new Error();
