@@ -42,7 +42,7 @@ passport.use(
           done(null, user);
         } else {
           const emailCheck = await query(
-            'SELECT * FROM users WHERE email = $1',
+            'SELECT email FROM users WHERE email = $1',
             [email]
           );
           if (emailCheck.rows && emailCheck.rows[0])

@@ -58,6 +58,28 @@ router.get('/contractors/:id', async (req, res) => {
   }
 });
 
+router.get('/user/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (req.user.id !== id) throw new Error(403);
+    const appointments = await query(
+      'SELECT * FROM appointments WHERE userId = $1',
+      [id]
+    );
+    if (!appointments.rows) throw new Error();
+    return res.json({ appointments: appointments.rows });
+  } catch (err) {
+    switch (err.message) {
+      case '403':
+        return res.status(403).json({ error: 'Forbidden' });
+      default:
+        return res.status(500).json({
+          error: 'There was a problem while retrieving appointments.',
+        });
+    }
+  }
+});
+
 // User, contractor, or both allowed to add/edit/delete?  Likely need permission from both.  For now, build either.
 
 router.post('/', async (req, res) => {
@@ -144,12 +166,10 @@ router.post('/contractor', async (req, res) => {
   } catch (err) {
     switch (err.message) {
       case '400':
-        return res
-          .status(400)
-          .json({
-            error:
-              'Request body must includes values for "userId", "serviceId", "scheduleId", "appointmentDatetime", and "duration" keys.',
-          });
+        return res.status(400).json({
+          error:
+            'Request body must includes values for "userId", "serviceId", "scheduleId", "appointmentDatetime", and "duration" keys.',
+        });
       case '403':
         return res.status(403).json({ error: 'Forbidden' });
       case '404 user':
