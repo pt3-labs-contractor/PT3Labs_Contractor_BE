@@ -58,7 +58,7 @@ router.get('/contractors/:id', async (req, res) => {
   }
 });
 
-router.get('/user/:id', async (req, res) => {
+router.get('/users/:id', async (req, res) => {
   try {
     const { id } = req.params;
     if (req.user.id !== id) throw new Error(403);
