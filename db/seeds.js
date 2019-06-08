@@ -199,7 +199,7 @@ function appointmentSeeds() {
       ];
       promises.push(
         query(
-          `INSERT INTO appointments("contractorId", "userId", "serviceId", "scheduleId", "appointmentDatetime", duration, confirmed)
+          `INSERT INTO appointments("contractorId", "userId", "serviceId", "scheduleId", "startTime", duration, confirmed)
             VALUES ($1, $2, $3, $4, $5, $6, $7)`,
           values
         )

@@ -88,11 +88,11 @@ router.post('/', async (req, res) => {
       contractorId,
       serviceId,
       scheduleId,
-      appointmentDatetime,
+      startTime,
       duration,
     } = req.body;
     const userAppt = await query(
-      `INSERT INTO appointments ("contractorId", "userId", "serviceId", "scheduleId", "appointmentDatetime", duration) 
+      `INSERT INTO appointments ("contractorId", "userId", "serviceId", "scheduleId", "startTime", duration) 
       VALUES ($1, $2, $3, $4, $5, $6) 
       RETURNING *`,
       [
@@ -100,7 +100,7 @@ router.post('/', async (req, res) => {
         req.user.id,
         serviceId,
         scheduleId,
-        appointmentDatetime,
+        startTime,
         duration,
       ]
     );
@@ -118,14 +118,14 @@ router.post('/contractor', async (req, res) => {
       userId,
       serviceId,
       scheduleId,
-      appointmentDatetime,
+      startTime,
       duration,
     } = req.body;
     if (
       !userId ||
       !serviceId ||
       !scheduleId ||
-      !appointmentDatetime ||
+      !startTime ||
       !duration
     )
       throw new Error(400);
@@ -150,7 +150,7 @@ router.post('/contractor', async (req, res) => {
     )
       throw new Error(403);
     const userAppt = await query(
-      `INSERT INTO appointments ("contractorId", "userId", "serviceId", "scheduleId", "appointmentDatetime", duration) 
+      `INSERT INTO appointments ("contractorId", "userId", "serviceId", "scheduleId", "startTime", duration) 
       VALUES ($1, $2, $3, $4, $5, $6) 
       RETURNING *`,
       [
@@ -158,7 +158,7 @@ router.post('/contractor', async (req, res) => {
         userId,
         serviceId,
         scheduleId,
-        appointmentDatetime,
+        startTime,
         duration,
       ]
     );
@@ -168,7 +168,7 @@ router.post('/contractor', async (req, res) => {
       case '400':
         return res.status(400).json({
           error:
-            'Request body must includes values for "userId", "serviceId", "scheduleId", "appointmentDatetime", and "duration" keys.',
+            'Request body must includes values for "userId", "serviceId", "scheduleId", "startTime", and "duration" keys.',
         });
       case '403':
         return res.status(403).json({ error: 'Forbidden' });
@@ -194,7 +194,7 @@ router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { user } = req;
-    const { appointmentDatetime, duration } = req.body;
+    const { startTime, duration } = req.body;
     const appt = await query('SELECT * FROM appointments WHERE id = $1', [id]);
     if (!appt.rows || !appt.rows[0]) throw new Error(404);
     if (
@@ -203,8 +203,8 @@ router.put('/:id', async (req, res) => {
     )
       throw new Error(403);
     const userAppt = await query(
-      'UPDATE appointments SET "appointmentDatetime" = $1, duration = $2 WHERE id = $3 RETURNING *',
-      [appointmentDatetime, duration, id]
+      'UPDATE appointments SET "startTime" = $1, duration = $2 WHERE id = $3 RETURNING *',
+      [startTime, duration, id]
     );
     return res.json({ updated: userAppt.rows[0] });
   } catch (err) {

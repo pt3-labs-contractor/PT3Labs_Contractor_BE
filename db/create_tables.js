@@ -100,11 +100,11 @@ function createAppointmentsTable() {
     "userId" UUID NOT NULL,
     "serviceId" UUID NOT NULL,
     "scheduleId" UUID NOT NULL,
-    "appointmentDatetime" TIMESTAMPTZ NOT NULL,
+    "startTime" TIMESTAMPTZ NOT NULL,
     duration INTERVAL NOT NULL,
     confirmed BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP DEFAULT NOW(),
-    UNIQUE("contractorId", "userId", "serviceId", "appointmentDatetime"),
+    UNIQUE("contractorId", "userId", "serviceId", "startTime"),
     FOREIGN KEY ("contractorId") REFERENCES contractors(id)
     ON DELETE CASCADE,
     FOREIGN KEY ("userId") REFERENCES users(id)
@@ -152,7 +152,7 @@ async function createIndices() {
   await query(`CREATE INDEX IX_services_contractorId
     ON services ("contractorId");`);
   await query(`CREATE INDEX IX_appointments_datetime
-    ON appointments ("appointmentDatetime");`);
+    ON appointments ("startTime");`);
 }
 
 query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
