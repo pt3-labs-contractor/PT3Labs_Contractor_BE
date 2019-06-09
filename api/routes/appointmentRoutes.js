@@ -95,14 +95,7 @@ router.post('/', async (req, res) => {
       `INSERT INTO appointments ("contractorId", "userId", "serviceId", "scheduleId", "startTime", duration) 
       VALUES ($1, $2, $3, $4, $5, $6) 
       RETURNING *`,
-      [
-        contractorId,
-        req.user.id,
-        serviceId,
-        scheduleId,
-        startTime,
-        duration,
-      ]
+      [contractorId, req.user.id, serviceId, scheduleId, startTime, duration]
     );
     return res.json({ created: userAppt.rows[0] });
   } catch (err) {
@@ -114,20 +107,8 @@ router.post('/', async (req, res) => {
 
 router.post('/contractor', async (req, res) => {
   try {
-    const {
-      userId,
-      serviceId,
-      scheduleId,
-      startTime,
-      duration,
-    } = req.body;
-    if (
-      !userId ||
-      !serviceId ||
-      !scheduleId ||
-      !startTime ||
-      !duration
-    )
+    const { userId, serviceId, scheduleId, startTime, duration } = req.body;
+    if (!userId || !serviceId || !scheduleId || !startTime || !duration)
       throw new Error(400);
     if (!req.user.contractorId || req.user.id === userId) throw new Error(403);
     const user = await query('SELECT id FROM users WHERE id = $1 LIMIT 1', [
