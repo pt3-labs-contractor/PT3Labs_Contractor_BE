@@ -1,12 +1,34 @@
 const express = require('express');
+const axios = require('axios');
 const { query } = require('../../db');
 
 const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const contractors = await query('SELECT * FROM contractors;');
-    return res.json({ contractors: contractors.rows });
+    const result = await query('SELECT * FROM contractors;');
+    const promises = [];
+    result.rows.forEach(async contractor => {
+      promises.push(
+        axios
+          .get(
+            `https://dev.virtualearth.net/REST/V1/Routes/Driving?wp.0=Buffalo&wp.1=${contractor.city.replace(
+              ' ',
+              '%20'
+            )},${contractor.stateAbbr}&key=${process.env.BING_MAPS_KEY}`
+          )
+          .then(response => {
+            return {
+              ...contractor,
+              distance:
+                response.data.resourceSets[0].resources[0].travelDistance,
+            };
+          })
+          .catch(() => contractor)
+      );
+    });
+    const contractors = await Promise.all(promises);
+    return res.json({ contractors });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
