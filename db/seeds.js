@@ -42,15 +42,34 @@ function deleteFromTables() {
 
 function contractorSeeds() {
   return new Promise(async resolve => {
+    const bingCalls = [];
+    const zips = [];
+    bingCalls.push(
+      new Promise(finishLoop => {
+        (function stalledLoop(i) {
+          setTimeout(() => {
+            console.log(i);
+            const zipCode = faker.address.zipCode();
+            zips.push(zipCode);
+            bingCalls.push(
+              axios.get(
+                `https://dev.virtualearth.net/REST/v1/Locations?countryRegion=US&postalCode=${zipCode}&key=${process.env.BING_MAPS_KEY}`
+              )
+            );
+            if (--i) stalledLoop(i);
+            else finishLoop();
+          }, 200);
+        })(250);
+      })
+    );
+    await Promise.all(bingCalls); // This will wait for the initial promise, which times the loop
+    const coordinates = await Promise.all(bingCalls); // This will captures and wait for all additional promises.
+    coordinates.shift(); // Remove initial promise
     const promises = [];
-    for (let i = 0; i < 250; i += 1) {
-      const zipCode = faker.address.zipCode();
-      const response = await axios.get(
-        `https://dev.virtualearth.net/REST/v1/Locations?countryRegion=US&postalCode=${zipCode}&key=${process.env.BING_MAPS_KEY}`
-      );
-      const [latitude, longitude] = response.data.resourceSets[0].resources
-        .length
-        ? response.data.resourceSets[0].resources[0].point.coordinates
+    for (let i = 0; i < coordinates.length; i += 1) {
+=      const [latitude, longitude] = coordinates[i].data.resourceSets[0]
+        .resources.length
+        ? coordinates[i].data.resourceSets[0].resources[0].point.coordinates
         : [null, null];
       promises.push(
         query(
@@ -64,7 +83,7 @@ function contractorSeeds() {
             faker.address.streetAddress(),
             faker.address.city(),
             faker.address.stateAbbr(),
-            zipCode,
+            zips[i],
             latitude,
             longitude,
           ]
