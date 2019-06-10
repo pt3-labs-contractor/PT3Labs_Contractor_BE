@@ -36,6 +36,8 @@ function createContractorsTable() {
     city TEXT NOT NULL,
     "stateAbbr" VARCHAR(2) NOT NULL,
     "zipCode" VARCHAR(10) NOT NULL,
+    latitude TEXT DEFAULT NULL,
+    longitude TEXT DEFAULT NULL,
     "createdAt" TIMESTAMP DEFAULT NOW()
   );
   `);

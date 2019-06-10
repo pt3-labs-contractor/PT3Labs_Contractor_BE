@@ -1,5 +1,6 @@
 const { Pool } = require('pg');
 const faker = require('faker');
+const axios = require('axios');
 require('dotenv').config();
 
 const pool = new Pool({
@@ -43,11 +44,19 @@ function contractorSeeds() {
   return new Promise(async resolve => {
     const promises = [];
     for (let i = 0; i < 250; i += 1) {
+      const zipCode = faker.address.zipCode();
+      const response = await axios.get(
+        `https://dev.virtualearth.net/REST/v1/Locations?countryRegion=US&postalCode=${zipCode}&key=${process.env.BING_MAPS_KEY}`
+      );
+      const [latitude, longitude] = response.data.resourceSets[0].resources
+        .length
+        ? response.data.resourceSets[0].resources[0].point.coordinates
+        : [null, null];
       promises.push(
         query(
           `
-            INSERT INTO contractors (name, "phoneNumber", "streetAddress", city, "stateAbbr", "zipCode")
-            VALUES ($1, $2, $3, $4, $5, $6);
+            INSERT INTO contractors (name, "phoneNumber", "streetAddress", city, "stateAbbr", "zipCode", latitude, longitude)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
           `,
           [
             faker.company.companyName(),
@@ -55,7 +64,9 @@ function contractorSeeds() {
             faker.address.streetAddress(),
             faker.address.city(),
             faker.address.stateAbbr(),
-            faker.address.zipCode(),
+            zipCode,
+            latitude,
+            longitude,
           ]
         )
       );
