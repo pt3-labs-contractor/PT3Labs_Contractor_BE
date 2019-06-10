@@ -7,68 +7,17 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     const contractors = await query('SELECT * FROM contractors;');
-    return res.json({ contractors: contractors.rows });
+    const promises = contractors.rows.map(async contractor => {
+      const services = await query(
+        'SELECT * FROM services WHERE "contractorId" = $1',
+        [contractor.id]
+      );
+      return { ...contractor, services: services.rows };
+    });
+    const contractorsWithServices = await Promise.all(promises);
+    return res.json({ contractors: contractorsWithServices });
   } catch (error) {
     return res.status(500).json({ error: error.message });
-  }
-});
-
-router.get('/zip/:zip', async (req, res) => {
-  function isCenterOfUS(lat, long) {
-    return lat === '39.495914459228516' && long === '-98.98998260498047';
-  }
-  async function haversine(zip, strLat2, strLong2) {
-    const response = await axios.get(
-      `https://dev.virtualearth.net/REST/v1/Locations?countryRegion=US&postalCode=${zip}&key=${process.env.BING_MAPS_KEY}`
-    );
-    if (!response.data.resourceSets[0].resources.length) throw new Error(400);
-    const [
-      lat1,
-      long1,
-    ] = response.data.resourceSets[0].resources[0].point.coordinates;
-    if (isCenterOfUS(lat1, long1)) throw new Error(400);
-    const [lat2, long2] = [Number(strLat2), Number(strLong2)];
-    const toRad = n => (n * Math.PI) / 180;
-    const [dLat, dLong] = [toRad(lat2 - lat1), toRad(long2 - long1)];
-    const R = 6371; // Earth's radius
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(toRad(lat1)) *
-        Math.cos(toRad(lat2)) *
-        Math.sin(dLong / 2) *
-        Math.sin(dLong / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return (R * c).toFixed(4);
-  }
-  try {
-    const { zip } = req.params;
-    const result = await query('SELECT * FROM contractors;');
-    const promises = result.rows.map(async contractor => {
-      if (
-        !contractor.latitude ||
-        isCenterOfUS(contractor.latitude, contractor.longitude)
-      ) {
-        return contractor;
-      }
-      const distance = await haversine(
-        zip,
-        contractor.latitude,
-        contractor.longitude
-      );
-      return { ...contractor, distance };
-    });
-    const contractors = await Promise.all(promises);
-    return res.json({
-      contractors: contractors.sort((a, b) => {
-        if (!a.distance) return 1;
-        if (!b.distance) return -1;
-        return a.distance - b.distance;
-      }),
-    });
-  } catch (err) {
-    return res
-      .status(500)
-      .json({ error: 'There was an error while retrieving contractors.' });
   }
 });
 
@@ -93,10 +42,16 @@ router.get('/:id', async (req, res) => {
     const contractor = await query('SELECT * FROM contractors WHERE id = $1;', [
       id,
     ]);
-    if (!contractor.rows || !contractor.rows.length) {
+    if (!contractor.rows || !contractor.rows[0]) {
       throw new Error(404);
     }
-    return res.json({ contractor: contractor.rows });
+    const services = await query(
+      'SELECT * FROM services WHERE "contractorId" = $1',
+      [contractor.rows[0].id]
+    );
+    return res.json({
+      contractor: { ...contractor.rows[0], services: services.rows },
+    });
   } catch (error) {
     switch (error.message) {
       case '404':
