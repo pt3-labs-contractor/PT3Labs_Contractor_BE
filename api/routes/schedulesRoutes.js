@@ -55,20 +55,6 @@ router.get('/contractor/:id', async (req, res) => {
   }
 });
 
-// Post as a callback
-// router.post('/', (req, res) => {
-//   query(
-//     'INSERT INTO schedules (contractorId, startTime, duration) VALUES ($1, $2, $3) RETURNING *',
-//     [req.body.contractorId, req.body.startTime, req.body.duration],
-//     (error, result) => {
-//       if (error) {
-//         throw error;
-//       }
-//       res.status(201).send(`user added with ID: ${result.rows[0].id}`);
-//     }
-//   );
-// });
-
 router.post('/', async (req, res) => {
   try {
     const { user } = req;

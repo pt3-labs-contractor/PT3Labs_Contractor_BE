@@ -48,15 +48,18 @@ function contractorSeeds() {
       new Promise(finishLoop => {
         (function stalledLoop(i) {
           setTimeout(() => {
-            console.log(i);
             const zipCode = faker.address.zipCode();
             zips.push(zipCode);
             bingCalls.push(
               axios.get(
-                `https://dev.virtualearth.net/REST/v1/Locations?countryRegion=US&postalCode=${zipCode}&key=${process.env.BING_MAPS_KEY}`
+                `https://dev.virtualearth.net/REST/v1/Locations?countryRegion=US&postalCode=${zipCode}&key=${
+                  process.env.BING_MAPS_KEY
+                }`
               )
             );
-            if (--i) stalledLoop(i);
+            // eslint-disable-next-line no-param-reassign
+            i -= 1;
+            if (i) stalledLoop(i);
             else finishLoop();
           }, 200);
         })(250);
@@ -67,7 +70,7 @@ function contractorSeeds() {
     coordinates.shift(); // Remove initial promise
     const promises = [];
     for (let i = 0; i < coordinates.length; i += 1) {
-=      const [latitude, longitude] = coordinates[i].data.resourceSets[0]
+      const [latitude, longitude] = coordinates[i].data.resourceSets[0]
         .resources.length
         ? coordinates[i].data.resourceSets[0].resources[0].point.coordinates
         : [null, null];

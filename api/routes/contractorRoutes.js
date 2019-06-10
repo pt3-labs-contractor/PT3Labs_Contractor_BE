@@ -1,5 +1,4 @@
 const express = require('express');
-const axios = require('axios');
 const { query } = require('../../db');
 
 const router = express.Router();
@@ -134,45 +133,6 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Note: Use this one if the one above doesnt work
-// router.put('/:id', async (req, res) => {
-//   try {
-//     const contractor = await query(
-//       'UPDATE contractors SET name = ($1), phoneNumber = ($2), streetAddress = ($3), city = ($4), stateAbbr = ($5), zipCode = ($6) WHERE id = ($7) RETURNING *',
-//       [
-//         req.body.name,
-//         req.body.phoneNumber,
-//         req.body.streetAddress,
-//         req.body.city,
-//         req.body.stateAbbr,
-//         req.body.zipCode,
-//         req.params.id,
-//       ]
-//     );
-//     return res.json(contractor.rows[0]);
-//   } catch (err) {
-//     return err;
-//   }
-// });
-
-// As a callback. Note:  save for back up endpoint
-// router.put('/:id', (req, res) => {
-//   const id = parseInt(req.params.id);
-//   const {name, phoneNumber, streetAddress, city, stateAbbr, zipCode} = request.body};
-
-//   query(
-//   'UPDATE contractors SET name = $1, phoneNumber = $2, streetAddress = $3, city = $4, stateAbbr = $5, zipCode = $6 WHERE id = $7',
-//   [name, phoneNumber, streetAddress, city, stateAbbr, zipCode],
-//   (error, result) => {
-//     if (error) {
-//       throw error
-//     }
-//     res.status(200).send(`contractor modified with ID: ${id}`)
-//   }
-//   )
-// });
-
-// As a callback
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
