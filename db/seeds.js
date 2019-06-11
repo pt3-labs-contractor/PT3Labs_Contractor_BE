@@ -62,7 +62,7 @@ function contractorSeeds() {
             if (i) stalledLoop(i);
             else finishLoop();
           }, 200);
-        })(250);
+        })(100);
       })
     );
     await Promise.all(bingCalls); // This will wait for the initial promise, which times the loop
@@ -179,14 +179,29 @@ function servicesSeeds() {
     const contractors = await query('SELECT * FROM contractors;');
     const promises = [];
     for (let i = 0; i < contractors.rows.length; i += 1) {
-      const num = faker.random.number({ min: 1, max: 5 });
+      const num = faker.random.number({ min: 1, max: 3 });
+      const serviceCategories = [
+        'electrical',
+        'plumbing',
+        'landscaping',
+        'carpentry',
+        'health and beauty',
+        'masonry',
+        'roofing and siding',
+      ];
       for (let j = 0; j < num; j += 1) {
+        const rand = faker.random.number({
+          min: 0,
+          max: serviceCategories.length - 1,
+        });
+        const service = serviceCategories[rand];
+        serviceCategories.splice(rand, 1);
         promises.push(
           query(
             `INSERT INTO services (name, price, "contractorId")
         VALUES ($1, $2, $3)`,
             [
-              'Test Service',
+              service,
               faker.random.number({ min: 10, max: 100 }),
               contractors.rows[i].id,
             ]
