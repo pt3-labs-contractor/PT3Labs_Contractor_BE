@@ -9,6 +9,7 @@ client.messages
   .create({
     to: process.env.MY_PHONE_NUMBER,
     from: '+18582521716',
-    body: 'This is a test message from twilio!!',
+    body:
+      'Someone booked an appointment! Please log into your account and confirm',
   })
   .then(message => console.log(message.sid));
