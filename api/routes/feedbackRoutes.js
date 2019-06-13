@@ -6,13 +6,34 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     const { user } = req;
-    const attribute = user.contractorId ? 'contractorId' : 'userId';
-    const value = user.contractorId || user.id;
-    const feedback = query(`SELECT * FROM feedback WHERE "${attribute}" = $1`, [
-      value,
-    ]);
-    if (!feedback.rows) throw new Error();
-    return res.json({ feedback: feedback.rows });
+    let feedback;
+    if (user.contractorId) {
+      const result = await query(
+        `SELECT f.id, c.name as "contractorName", username, stars, message, f."createdAt", f."contractorId", f."userId" FROM feedback f
+        JOIN contractors c
+        ON f."contractorId" = c.id
+        JOIN users u
+        ON f."userId" = u.id
+        WHERE f."contractorId" = $1;`,
+        [user.contractorId]
+      );
+      if (!result.rows) throw new Error();
+      feedback = result.rows;
+    } else {
+      const result = await query(
+        `SELECT f.id, c.name as "contractorName", stars, message, f."createdAt", f."contractorId", f."userId" FROM feedback f
+        JOIN contractors c
+        ON f."contractorId" = c.id
+        WHERE f."userId" = $1;`,
+        [user.id]
+      );
+      if (!result.rows) throw new Error();
+      feedback = result.rows.map(x => {
+        return { ...x, username: user.username };
+      });
+    }
+    console.log(feedback);
+    return res.json({ feedback });
   } catch (err) {
     return res
       .status(500)

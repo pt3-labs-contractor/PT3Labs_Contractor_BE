@@ -175,7 +175,7 @@ router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { user } = req;
-    const { startTime, duration } = req.body;
+    const { startTime, duration, confirmed } = req.body;
     const appt = await query('SELECT * FROM appointments WHERE id = $1', [id]);
     if (!appt.rows || !appt.rows[0]) throw new Error(404);
     if (
@@ -184,8 +184,8 @@ router.put('/:id', async (req, res) => {
     )
       throw new Error(403);
     const userAppt = await query(
-      'UPDATE appointments SET "startTime" = $1, duration = $2 WHERE id = $3 RETURNING *',
-      [startTime, duration, id]
+      'UPDATE appointments SET "startTime" = $1, duration = $2, confirmed = $3 WHERE id = $4 RETURNING *',
+      [startTime, duration, confirmed, id]
     );
     return res.json({ updated: userAppt.rows[0] });
   } catch (err) {
