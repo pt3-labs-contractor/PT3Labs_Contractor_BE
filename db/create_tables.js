@@ -50,6 +50,7 @@ function createSchedulesTable() {
     "contractorId" UUID NOT NULL,
     "startTime" TIMESTAMPTZ NOT NULL,
     duration INTERVAL NOT NULL,
+    open BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP DEFAULT NOW(),
     UNIQUE ("contractorId", "startTime"),
     FOREIGN KEY ("contractorId") REFERENCES contractors(id)

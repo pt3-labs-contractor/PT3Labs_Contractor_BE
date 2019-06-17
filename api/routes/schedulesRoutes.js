@@ -79,6 +79,7 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    const { startTime, duration, open } = req.body;
     const { user } = req;
     const entry = await query(
       'SELECT "contractorId" FROM schedules WHERE id = $1',
@@ -87,8 +88,8 @@ router.put('/:id', async (req, res) => {
     if (!entry.rows || !entry.rows[0]) throw new Error(404);
     if (user.contractorId !== entry.rows[0].contractorId) throw new Error(403);
     const schedule = await query(
-      'UPDATE schedules SET "contractorId" = $1, "startTime" = $2, duration = $3 WHERE id = $4 RETURNING *;',
-      [user.contractorId, req.body.startTime, req.body.duration, id]
+      'UPDATE schedules SET "startTime" = $1, duration = $2, open = $3 WHERE id = $4 RETURNING *;',
+      [startTime, duration, open, id]
     );
     return res.json({ updated: schedule.rows[0] });
   } catch (err) {
