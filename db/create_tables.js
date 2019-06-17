@@ -68,6 +68,7 @@ function createUsersTable() {
     "phoneNumber" TEXT UNIQUE,
     email TEXT UNIQUE,
     "contractorId" UUID DEFAULT NULL,
+    "subscriptionId" TEXT DEFAULT NULL,
     "createdAt" TIMESTAMP DEFAULT NOW(),
     FOREIGN KEY ("contractorId") REFERENCES contractors(id)
     ON DELETE CASCADE,
