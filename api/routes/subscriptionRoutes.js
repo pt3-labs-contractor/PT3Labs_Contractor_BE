@@ -10,7 +10,7 @@ router.use((req, res, next) => {
       error:
         "Subscriptions only hold benefits for contractor accounts.  If you'd like to support us, please reach out to us about donations.",
     });
-  next();
+  return next();
 });
 
 router.get('/', async (req, res) => {
@@ -18,7 +18,7 @@ router.get('/', async (req, res) => {
     const id = req.user.subscriptionId;
     if (!id) throw new Error(404);
     const subscription = await stripe.subscriptions.retrieve(id);
-    res.json({ subscription });
+    return res.json({ subscription });
   } catch (error) {
     switch (error.message) {
       case '404':
@@ -63,15 +63,15 @@ router.post('/', async (req, res) => {
       customer: customer.id,
       items: [{ plan: process.env.STRIPE_PLAN_ID_TEST }],
     });
-    const query = await query(
+    const success = await query(
       `UPDATE users 
       SET "subscriptionId" = $1 
       WHERE id = $2
       RETURNING id, username, "googleId", email, "phoneNumber", "contractorId", "subscriptionId", "createdAt";`,
       [subscription.id, req.user.id]
     );
-    if (!query.rows || !query.rows[0]) throw new Error();
-    return res.status(201).json({ success: query.rows[0] });
+    if (!success.rows || !success.rows[0]) throw new Error();
+    return res.status(201).json({ success: success.rows[0] });
   } catch (error) {
     switch (error.message) {
       case '400':
@@ -101,18 +101,29 @@ router.delete('/', async (req, res) => {
     const id = req.user.subscriptionId;
     if (!id) throw new Error(404);
     const deleted = await stripe.subscriptions.del(id);
-    const query = await query(
+    const success = await query(
       `UPDATE users
     SET "subscriptionId" = NULL
     WHERE id = $1
     RETURNING id, username, "googleId", email, "phoneNumber", "contractorId", "subscriptionId", "createdAt";`,
       [req.user.id]
     );
-    if (!query.rows || !query.rows[0]) {
+    if (!success.rows || !success.rows[0]) {
       throw new Error();
     }
-    res.json({ success: query.rows[0] });
-  } catch (error) {}
+    return res.json({ success: success.rows[0] });
+  } catch (error) {
+    switch (error.message) {
+      case '404':
+        return res
+          .status(404)
+          .json({ error: 'No active subscription listed for this account.' });
+      default:
+        return res.status(500).json({
+          error: 'There was an error while attempting to delete subscription.',
+        });
+    }
+  }
 });
 
 module.exports = router;
