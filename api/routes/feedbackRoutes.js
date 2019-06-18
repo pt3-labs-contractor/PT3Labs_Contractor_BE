@@ -45,12 +45,15 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const feedback = await query(
-      'SELECT * FROM feedback WHERE contractorId = $1;',
+      'SELECT * FROM feedback WHERE "contractorId" = $1;',
       [id]
     );
+    if (!feedback.rows) throw new Error();
     res.json({ feedback: feedback.rows });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res
+      .status(500)
+      .json({ error: 'There was an error while retrieving feedback entry.' });
   }
 });
 
@@ -77,6 +80,34 @@ router.post('/:id', async (req, res) => {
         });
       default:
         return res.status(500).json({ error: err.message });
+    }
+  }
+});
+
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const check = await query('SELECT FROM feedback WHERE id = $1', [id]);
+    if (!check.rows || !check.rows[0]) throw new Error(404);
+    if (req.user.id !== check.rows[0].userId) throw new Error(403);
+    const entry = await query(
+      'DELETE FROM feedback WHERE id = $1 RETURNING *',
+      [id]
+    );
+    if (!entry.rows || !entry.rows[0]) throw new Error();
+    return res.json({ deleted: entry.rows[0] });
+  } catch (error) {
+    switch (error.message) {
+      case '404':
+        return res
+          .status(404)
+          .json({ error: 'No feedback entry with that ID found.' });
+      case '403':
+        return res.status(403).json({ error: 'Forbidden' });
+      default:
+        return res
+          .status(500)
+          .json({ error: 'There was an error while deleting feedback.' });
     }
   }
 });
