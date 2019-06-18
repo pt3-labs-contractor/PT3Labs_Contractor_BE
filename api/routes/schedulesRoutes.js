@@ -55,10 +55,48 @@ router.get('/contractor/:id', async (req, res) => {
   }
 });
 
+async function checkForLimit(req) {
+  const { startTime, duration } = req.body;
+  const date = new Date(startTime);
+  if (Number.isNaN(date.getDate())) throw new Error(400);
+  const dateShorthand = `${date.getFullYear()}-${date.getMonth() +
+    1}-${date.getDate()}`;
+  const dayOfWeek = date.getDay();
+  const blocks = await query(
+    `SELECT "startTime", duration FROM schedules
+      WHERE "startTime" >= (date '${dateShorthand}T00:00:00' - interval '${dayOfWeek} days')
+      AND "startTime" <= (date '${dateShorthand}T23:59:59' + interval '${7 -
+      dayOfWeek} days')
+      AND "contractorId" = $1;`,
+    [req.user.contractorId]
+  );
+  const currentHours = blocks.rows.reduce((a, b) => {
+    const hours =
+      b.duration.hours + (b.duration.minutes ? b.duration.minutes / 60 : 0);
+    return a + hours;
+  }, 0);
+  const newHours =
+    typeof duration === 'object'
+      ? duration.hours
+      : Number((duration.match(/\d+(?=h)/) || [])[0]);
+  const newMinutes =
+    typeof duration === 'object'
+      ? duration.minutes
+      : Number((duration.match(/\d+(?=m)/) || [])[0]);
+  let scheduleTime = 0;
+  if (newHours) scheduleTime += newHours;
+  if (newMinutes) scheduleTime += newMinutes / 60;
+  if (currentHours + scheduleTime > 5) {
+    throw new Error('limit');
+  }
+  return true;
+}
+
 router.post('/', async (req, res) => {
   try {
     const { user } = req;
     if (!user.contractorId) throw new Error(403);
+    if (!user.subscriptionId) await checkForLimit(req);
     const schedule = await query(
       'INSERT INTO schedules ("contractorId", "startTime", duration) VALUES ($1, $2, $3) RETURNING *',
       [user.contractorId, req.body.startTime, req.body.duration]
@@ -66,6 +104,13 @@ router.post('/', async (req, res) => {
     return res.status(201).json({ created: schedule.rows[0] });
   } catch (err) {
     switch (err.message) {
+      case '400':
+        return res.status(400).json({ error: 'Invalid date format' });
+      case 'limit':
+        return res.status(403).json({
+          error:
+            'Only subscribers may schedule more than 5 hours of availability per week.',
+        });
       case '403':
         return res.status(403).json({ error: 'Forbidden' });
       default:
@@ -144,7 +189,6 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// Come back to this
 router.get('/date/:dateString', async (req, res) => {
   try {
     const { dateString } = req.params;
@@ -155,6 +199,22 @@ router.get('/date/:dateString', async (req, res) => {
     const appointments = await query(
       `SELECT * FROM schedules WHERE DATE_TRUNC('day', "startTime") = $1;`,
       [dateShorthand]
+    );
+    const dayOfWeek = date.getDay();
+    const blocks = await query(
+      `SELECT * FROM schedules
+      WHERE "startTime" >= (date '${dateShorthand}T00:00:00' - interval '${dayOfWeek} days')
+      AND "startTime" <= (date '${dateShorthand}T23:59:59' + interval '${7 -
+        dayOfWeek} days')
+      AND "contractorId" = $1;`,
+      [req.user.contractorId]
+    );
+    console.log(
+      blocks.rows.reduce((a, b) => {
+        const hours =
+          b.duration.hours + (b.duration.minutes ? b.duration.minutes / 60 : 0);
+        return a + hours;
+      }, 0)
     );
     if (!appointments.rows) throw new Error();
     return res.json({ appointments: appointments.rows });
