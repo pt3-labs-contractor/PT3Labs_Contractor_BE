@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY_TEST);
 
@@ -100,7 +101,9 @@ router.delete('/', async (req, res) => {
   try {
     const id = req.user.subscriptionId;
     if (!id) throw new Error(404);
-    const deleted = await stripe.subscriptions.del(id);
+    const scheduleDelete = await stripe.subscriptions.update(id, {
+      cancel_at_period_end: true,
+    });
     const success = await query(
       `UPDATE users
     SET "subscriptionId" = NULL
