@@ -70,6 +70,7 @@ async function checkForLimit(req) {
       AND "contractorId" = $1;`,
     [req.user.contractorId]
   );
+  if (!blocks.rows) throw new Error();
   const currentHours = blocks.rows.reduce((a, b) => {
     const hours =
       b.duration.hours + (b.duration.minutes ? b.duration.minutes / 60 : 0);
