@@ -29,7 +29,7 @@ async function query(text, values) {
 function createContractorsTable() {
   return query(`
   CREATE TABLE IF NOT EXISTS contractors (
-    id UUID NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     name TEXT NOT NULL,
     "phoneNumber" TEXT NOT NULL UNIQUE,
     "streetAddress" TEXT NOT NULL,
@@ -46,7 +46,7 @@ function createContractorsTable() {
 function createSchedulesTable() {
   return query(`
   CREATE TABLE IF NOT EXISTS schedules (
-    id UUID NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     "contractorId" UUID NOT NULL,
     "startTime" TIMESTAMPTZ NOT NULL,
     duration INTERVAL NOT NULL,
@@ -62,14 +62,13 @@ function createSchedulesTable() {
 function createUsersTable() {
   return query(`
   CREATE TABLE IF NOT EXISTS users (
-    id UUID NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     "googleId" TEXT UNIQUE,
     username TEXT UNIQUE,
     password TEXT UNIQUE,
     "phoneNumber" TEXT UNIQUE,
     email TEXT UNIQUE,
     "contractorId" UUID DEFAULT NULL,
-    "subscriptionId" TEXT DEFAULT NULL,
     "createdAt" TIMESTAMP DEFAULT NOW(),
     FOREIGN KEY ("contractorId") REFERENCES contractors(id)
     ON DELETE CASCADE,
@@ -85,7 +84,7 @@ function createUsersTable() {
 function createServicesTable() {
   return query(`
   CREATE TABLE IF NOT EXISTS services (
-    id UUID NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     name TEXT NOT NULL,
     price MONEY DEFAULT NULL,
     "contractorId" UUID NOT NULL,
@@ -99,7 +98,7 @@ function createServicesTable() {
 function createAppointmentsTable() {
   return query(`
   CREATE TABLE IF NOT EXISTS appointments (
-    id UUID NOT NULL UNIQUE DEFAULT uuid_generate_v4() PRIMARY KEY,
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     "contractorId" UUID NOT NULL,
     "userId" UUID NOT NULL,
     "serviceId" UUID NOT NULL,
@@ -124,7 +123,7 @@ function createAppointmentsTable() {
 function createFeedbackTable() {
   return query(`
   CREATE TABLE feedback (
-    id UUID NOT NULL UNIQUE DEFAULT uuid_generate_v4() PRIMARY KEY,
+    id DEFAULT uuid_generate_v4() PRIMARY KEY,
     "userId" UUID,
     "contractorId" UUID,
     stars INT NOT NULL,
@@ -136,6 +135,20 @@ function createFeedbackTable() {
     ON DELETE SET NULL
   ); 
   `);
+}
+
+function createStripeTable() {
+  return query(
+    `CREATE TABLE stripe(
+      "subscriptionId" TEXT UNIQUE,
+      "customerId" TEXT NOT NULL UNIQUE,
+      "userId" UUID NOT NULL UNIQUE,
+      "createdAt" TIMESTAMP DEFAULT NOW(),
+      PRIMARY KEY ("userId", "customerId"),
+      FOREIGN KEY ("userId") REFERENCES users(id)
+      ON DELETE CASCADE
+    );`
+  );
 }
 
 async function createIndices() {
@@ -157,6 +170,8 @@ async function createIndices() {
     ON services ("contractorId");`);
   await query(`CREATE INDEX IX_appointments_datetime
     ON appointments ("startTime");`);
+  await query(`CREATE INDEX IX_stripe_subscriptionId
+    ON stripe("subscriptionId");`);
 }
 
 query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
@@ -166,6 +181,7 @@ query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
   .then(createServicesTable)
   .then(createAppointmentsTable)
   .then(createFeedbackTable)
+  .then(createStripeTable)
   .then(createIndices)
   .then(() => pool.end())
   .catch(err => err);

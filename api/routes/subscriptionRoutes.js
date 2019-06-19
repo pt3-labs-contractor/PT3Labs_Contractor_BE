@@ -16,9 +16,15 @@ router.use((req, res, next) => {
 
 router.get('/', async (req, res) => {
   try {
-    const id = req.user.subscriptionId;
-    if (!id) throw new Error(404);
-    const subscription = await stripe.subscriptions.retrieve(id);
+    const { user } = req;
+    const entry = await query('SELECT * FROM stripe WHERE "userId" = $1', [
+      user.id,
+    ]);
+    if (!entry.rows || !entry.rows[0] || !entry.rows[0].subscriptionId)
+      throw new Error(404);
+    const subscription = await stripe.subscriptions.retrieve(
+      entry.rows[0].subscriptionId
+    );
     return res.json({ subscription });
   } catch (error) {
     switch (error.message) {
@@ -36,9 +42,15 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
+    const { user } = req;
     const { token, address } = req.body;
     if (!token || !address) throw new Error(400);
-    if (req.user.subscriptionId) throw new Error('existing');
+    const existing = await query('SELECT * FROM stripe WHERE "userId" = $1', [
+      user.id,
+    ]);
+    if (!existing.rows) throw new Error();
+    if (existing.rows[0] && existing.rows[0].subscriptionId)
+      throw new Error('existing');
     if (address.billing_address_country_code !== 'US')
       throw new Error('non-US');
     const owner = {
@@ -51,26 +63,53 @@ router.post('/', async (req, res) => {
       },
       email: token.email,
     };
-    const customer = await stripe.customers.create(owner);
-    const source = await stripe.sources.create({
-      type: 'card',
-      token: token.id,
-      owner,
-    });
-    const added = await stripe.customers.createSource(customer.id, {
-      source: source.id,
-    });
-    const subscription = await stripe.subscriptions.create({
-      customer: customer.id,
-      items: [{ plan: process.env.STRIPE_PLAN_ID_TEST }],
-    });
-    const success = await query(
-      `UPDATE users 
-      SET "subscriptionId" = $1 
-      WHERE id = $2
-      RETURNING id, username, "googleId", email, "phoneNumber", "contractorId", "subscriptionId", "createdAt";`,
-      [subscription.id, req.user.id]
-    );
+    let success;
+    if (existing.rows && existing.rows[0]) {
+      // If customer information already exists in database
+      const source = await stripe.sources.create({
+        type: 'card',
+        token: token.id,
+        owner,
+      });
+      const added = await stripe.customers.createSource(
+        existing.rows[0].customerId,
+        {
+          source: source.id,
+        }
+      );
+      const subscription = await stripe.subscriptions.create({
+        customer: existing.rows[0].customerId,
+        items: [{ plan: process.env.STRIPE_PLAN_ID_TEST }],
+      });
+      success = await query(
+        `UPDATE stripe
+        SET "subscriptionId" = $1
+        WHERE "userId" = $2
+        RETURNING *;`,
+        [subscription.id, user.id]
+      );
+    } else {
+      // If customer information does not exist in database
+      const customer = await stripe.customers.create(owner);
+      const source = await stripe.sources.create({
+        type: 'card',
+        token: token.id,
+        owner,
+      });
+      const added = await stripe.customers.createSource(customer.id, {
+        source: source.id,
+      });
+      const subscription = await stripe.subscriptions.create({
+        customer: customer.id,
+        items: [{ plan: process.env.STRIPE_PLAN_ID_TEST }],
+      });
+      success = await query(
+        `INSERT INTO stripe("subscriptionId", "customerId", "userId")
+      VALUES($1, $2, $3)
+      RETURNING *;`,
+        [subscription.id, customer.id, user.id]
+      );
+    }
     if (!success.rows || !success.rows[0]) throw new Error();
     return res.status(201).json({ success: success.rows[0] });
   } catch (error) {
@@ -99,22 +138,21 @@ router.post('/', async (req, res) => {
 
 router.delete('/', async (req, res) => {
   try {
-    const id = req.user.subscriptionId;
-    if (!id) throw new Error(404);
-    const scheduleDelete = await stripe.subscriptions.update(id, {
-      cancel_at_period_end: true,
-    });
-    const success = await query(
-      `UPDATE users
-    SET "subscriptionId" = NULL
-    WHERE id = $1
-    RETURNING id, username, "googleId", email, "phoneNumber", "contractorId", "subscriptionId", "createdAt";`,
-      [req.user.id]
+    const { user } = req;
+    const subscription = await query(
+      'SELECT * FROM stripe WHERE "userId" = $1',
+      [user.id]
     );
-    if (!success.rows || !success.rows[0]) {
-      throw new Error();
-    }
-    return res.json({ success: success.rows[0] });
+    if (!subscription.rows || !subscription.rows[0]) throw new Error(404);
+    const scheduleDelete = await stripe.subscriptions.update(
+      subscription.rows[0].id,
+      {
+        cancel_at_period_end: true,
+      }
+    );
+    return res.json({
+      success: 'Subscription will not renew at end of current period.',
+    });
   } catch (error) {
     switch (error.message) {
       case '404':

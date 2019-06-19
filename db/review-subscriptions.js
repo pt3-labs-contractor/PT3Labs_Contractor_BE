@@ -29,7 +29,7 @@ async function query(text, values) {
 
 async function checkUserSubscriptions() {
   const entries = await query(
-    'SELECT id, "subscriptionId" FROM users WHERE "subscriptionId" IS NOT NULL;'
+    'SELECT * FROM stripe WHERE "subscriptionId" IS NOT NULL;'
   );
   const subscribers = entries.rows;
   const promises = [];
@@ -40,18 +40,20 @@ async function checkUserSubscriptions() {
         .then(res => {
           if (res.status !== 'active') {
             promises.push(
-              query('UPDATE users SET "subscriptionId" = NULL WHERE id = $1', [
-                subscribers[i].id,
-              ])
+              query(
+                'UPDATE stripe SET "subscriptionId" = NULL WHERE "userId" = $1 AND "customerId" = $2;',
+                [subscribers[i].userId, subscribers[i].customerId]
+              )
             );
           }
         })
         .catch(err => {
           console.log(err);
           //   promises.push(
-          //     query('UPDATE users SET "subscriptionId" = NULL WHERE id = $1', [
-          //       subscribers[i].id,
-          //     ])
+          //     query(
+          //   'UPDATE stripe SET "subscriptionId" = NULL WHERE "userId" = $1 AND "customerId" = $2;',
+          //   [subscribers[i].userId, subscribers[i].customerId]
+          // )
           //   );
         })
     );

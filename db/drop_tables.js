@@ -27,7 +27,8 @@ async function query(text, values) {
 }
 
 function dropTables() {
-  query(`DROP TABLE IF EXISTS feedback;`)
+  query(`DROP TABLE IF EXISTS stripe;`)
+    .then(() => query(`DROP TABLE IF EXISTS feedback;`))
     .then(() => query(`DROP TABLE IF EXISTS appointments;`))
     .then(() => query(`DROP TABLE IF EXISTS services;`))
     .then(() => query(`DROP TABLE IF EXISTS users;`))
