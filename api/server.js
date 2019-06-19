@@ -22,7 +22,7 @@ app.use(cors());
 app.use(helmet());
 app.use(express.json());
 app.use('/api/auth', authRoutes);
-app.use('/api', authenticate);
+// app.use('/api', authenticate );
 app.use('/api/users', userRoutes);
 // app.use('/api', checkRequisiteUserInfo);
 app.use('/api/contractors', contractorRoutes);

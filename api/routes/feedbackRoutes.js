@@ -44,7 +44,9 @@ router.post('/:id', async (req, res) => {
       VALUES ($1, $2, $3, $4)
       RETURNING id, "userId", "contractorId", stars, message, "createdAt"`,
       [userId, id, stars, message]
+
     );
+    console.log(feedback)
     return res.status(201).json({ feedback: feedback.rows[0] });
   } catch (err) {
     switch (err.message) {
