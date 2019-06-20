@@ -1,14 +1,13 @@
 require('dotenv').config();
 const express = require('express');
-const twilio = require('twilio');
-const { query } = require('../../db');
+const Twilio = require('twilio');
 
 const router = express.Router();
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_ACCOUNT_TOKEN;
 
-const client = new twilio(accountSid, authToken);
+const client = new Twilio(accountSid, authToken);
 
 router.get('/send-text', (req, res) => {
   client.messages

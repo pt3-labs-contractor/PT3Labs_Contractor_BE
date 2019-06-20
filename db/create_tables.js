@@ -122,8 +122,8 @@ function createAppointmentsTable() {
 
 function createFeedbackTable() {
   return query(`
-  CREATE TABLE feedback (
-    id DEFAULT uuid_generate_v4() PRIMARY KEY,
+  CREATE TABLE IF NOT EXISTS feedback (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     "userId" UUID,
     "contractorId" UUID,
     stars INT NOT NULL,
@@ -139,7 +139,7 @@ function createFeedbackTable() {
 
 function createStripeTable() {
   return query(
-    `CREATE TABLE stripe(
+    `CREATE TABLE IF NOT EXISTS stripe (
       "subscriptionId" TEXT UNIQUE,
       "customerId" TEXT NOT NULL UNIQUE,
       "userId" UUID NOT NULL UNIQUE,
@@ -184,4 +184,4 @@ query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
   .then(createStripeTable)
   .then(createIndices)
   .then(() => pool.end())
-  .catch(err => err);
+  .catch(err => console.log(err));

@@ -80,8 +80,6 @@ router.get('/users/:id', async (req, res) => {
   }
 });
 
-// User, contractor, or both allowed to add/edit/delete?  Likely need permission from both.  For now, build either.
-
 router.post('/', async (req, res) => {
   try {
     const {

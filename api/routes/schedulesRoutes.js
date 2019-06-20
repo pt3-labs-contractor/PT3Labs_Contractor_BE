@@ -201,22 +201,6 @@ router.get('/date/:dateString', async (req, res) => {
       `SELECT * FROM schedules WHERE DATE_TRUNC('day', "startTime") = $1;`,
       [dateShorthand]
     );
-    const dayOfWeek = date.getDay();
-    const blocks = await query(
-      `SELECT * FROM schedules
-      WHERE "startTime" >= (date '${dateShorthand}T00:00:00' - interval '${dayOfWeek} days')
-      AND "startTime" <= (date '${dateShorthand}T23:59:59' + interval '${7 -
-        dayOfWeek} days')
-      AND "contractorId" = $1;`,
-      [req.user.contractorId]
-    );
-    console.log(
-      blocks.rows.reduce((a, b) => {
-        const hours =
-          b.duration.hours + (b.duration.minutes ? b.duration.minutes / 60 : 0);
-        return a + hours;
-      }, 0)
-    );
     if (!appointments.rows) throw new Error();
     return res.json({ appointments: appointments.rows });
   } catch (err) {

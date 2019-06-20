@@ -32,7 +32,6 @@ router.get('/', async (req, res) => {
         return { ...x, username: user.username };
       });
     }
-    console.log(feedback);
     return res.json({ feedback });
   } catch (err) {
     return res
@@ -69,7 +68,6 @@ router.post('/:id', async (req, res) => {
       RETURNING id, "userId", "contractorId", stars, message, "createdAt"`,
       [userId, id, stars, message]
     );
-    console.log(feedback);
     if (!feedback.rows || !feedback.rows[0]) throw new Error();
     return res.status(201).json({ feedback: feedback.rows[0] });
   } catch (err) {
