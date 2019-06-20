@@ -143,9 +143,14 @@ router.delete('/', async (req, res) => {
       'SELECT * FROM stripe WHERE "userId" = $1',
       [user.id]
     );
-    if (!subscription.rows || !subscription.rows[0]) throw new Error(404);
+    if (
+      !subscription.rows ||
+      !subscription.rows[0] ||
+      subscription.rows[0].subscriptionId === null
+    )
+      throw new Error(404);
     const scheduleDelete = await stripe.subscriptions.update(
-      subscription.rows[0].id,
+      subscription.rows[0].subscriptionId,
       {
         cancel_at_period_end: true,
       }
@@ -162,6 +167,96 @@ router.delete('/', async (req, res) => {
       default:
         return res.status(500).json({
           error: 'There was an error while attempting to delete subscription.',
+        });
+    }
+  }
+});
+
+router.delete('/immediate', async (req, res) => {
+  try {
+    const { user } = req;
+    const subscription = await query(
+      'SELECT * FROM stripe WHERE "userId" = $1',
+      [user.id]
+    );
+    if (
+      !subscription.rows ||
+      !subscription.rows[0] ||
+      subscription.rows[0].subscriptionId === null
+    )
+      throw new Error(404);
+    const scheduleDelete = await stripe.subscriptions.del(
+      subscription.rows[0].subscriptionId
+    );
+    const setToNull = await query(
+      `UPDATE stripe
+      SET "subscriptionId" = NULL
+      WHERE "userId" = $1
+      RETURNING *;`,
+      [user.id]
+    );
+    if (!setToNull.rows || !setToNull.rows[0]) throw new Error();
+    return res.json({ success: setToNull.rows[0] });
+  } catch (err) {
+    switch (err.message) {
+      case '404':
+        return res
+          .status(404)
+          .json({ error: 'No active subscription listed for this account.' });
+      default:
+        return res.status(500).json({
+          error: 'There was an error while attempting to delete subscription.',
+        });
+    }
+  }
+});
+
+router.put('/payment', async (req, res) => {
+  try {
+    const { user } = req;
+    const { token, address } = req.body;
+    if (!token || !address) throw new Error(400);
+    const existing = await query('SELECT * FROM stripe WHERE "userId" = $1', [
+      user.id,
+    ]);
+    if (!existing.rows || !existing.rows[0]) throw new Error(404);
+    if (address.billing_address_country_code !== 'US')
+      throw new Error('non-US');
+    const owner = {
+      name: address.billing_name,
+      address: {
+        line1: address.billing_address_line1,
+        city: address.billing_address_city,
+        postal_code: address.billing_address_zip,
+        country: address.billing_address_country_code,
+      },
+      email: token.email,
+    };
+    const source = await stripe.sources.create({
+      type: 'card',
+      token: token.id,
+      owner,
+    });
+    const added = await stripe.customers.createSource(
+      existing.rows[0].customerId,
+      {
+        source: source.id,
+      }
+    );
+    return res.json({ success: 'Payment source successfully changed.' });
+  } catch (err) {
+    switch (err.message) {
+      case '400':
+        return res.status(400).json({
+          error: 'Request must include values for token and address keys.',
+        });
+      case '404':
+        return res
+          .status(404)
+          .json({ error: 'No active subscription found for this account.' });
+      default:
+        return res.status(500).json({
+          error: 'There was an error while attempting to update payment info.',
         });
     }
   }

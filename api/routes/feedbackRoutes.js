@@ -61,6 +61,10 @@ router.post('/:id', async (req, res) => {
     const { id } = req.params;
     const { stars, message } = req.body;
     const userId = req.user.id;
+    const contractor = await query('SELECT id FROM contractors WHERE id = $1', [
+      id,
+    ]);
+    if (!contractor.rows || !contractor.rows[0]) throw new Error(404);
     if (!stars || !message) throw new Error(400);
     const feedback = await query(
       `INSERT INTO feedback ("userId", "contractorId", stars, message)
@@ -75,6 +79,10 @@ router.post('/:id', async (req, res) => {
       case '400':
         return res.status(400).json({
           error: 'Request must include values for stars and message keys.',
+        });
+      case '404':
+        return res.status(404).json({
+          error: 'No contractor found with that ID.',
         });
       default:
         return res.status(500).json({ error: err.message });
