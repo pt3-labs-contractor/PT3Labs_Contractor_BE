@@ -8,12 +8,12 @@ const stripeChargeCallback = res => (stripeErr, stripeRes) => {
   }
 };
 const paymentApi = server => {
-  server.get('/', (req, res) => {
-    res.send({
-      message: 'Hello Stripe checkout server!',
-      timestamp: new Date().toISOString(),
-    });
-  });
+  // server.get('/', (req, res) => {
+  //   res.send({
+  //     message: 'Hello Stripe checkout server!',
+  //     timestamp: new Date().toISOString(),
+  //   });
+  // });
 
   server.post('/', (req, res) => {
     const body = {
@@ -25,4 +25,33 @@ const paymentApi = server => {
   });
   return server;
 };
+
+// subscription
+// const stripeChargeCallback = res => (stripeErr, stripeRes) => {
+//   if (stripeErr) {
+//     res.status(500).send({ error: stripeErr });
+//   } else {
+//     res.status(200).send({ success: stripeRes });
+//   }
+// };
+// const paymentApi = server => {
+//   // server.get('/', (req, res) => {
+//   //   res.send({
+//   //     message: 'Hello Stripe checkout server!',
+//   //     timestamp: new Date().toISOString(),
+//   //   });
+//   // });
+
+//   server.post('/', (req, res) => {
+//     const {token, email } = req.body
+
+//     stripe.customers.create(
+//       {
+//         email: email,
+//         source: token.id
+//       }
+//   })
+//   return server;
+// };
+
 module.exports = paymentApi;

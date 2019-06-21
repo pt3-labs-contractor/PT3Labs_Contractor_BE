@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 import StripeCheckout from 'react-stripe-checkout';
 import axios from 'axios';
 
@@ -10,7 +10,7 @@ const stripeButton = () => {
   // Func. sends token and the amount to our back end in the body with axios request in this case to finish the transaction
   const onToken = token => {
     const body = {
-      amount: 999,
+      amount: 1000,
       token: token,
     };
     axios
