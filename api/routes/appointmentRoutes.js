@@ -1,7 +1,12 @@
 const express = require('express');
+const Twilio = require('twilio');
 const { query } = require('../../db');
 
 const router = express.Router();
+
+const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID;
+const twilioAuthToken = process.env.TWILIO_ACCOUNT_TOKEN;
+const twilioClient = new Twilio(twilioAccountSid, twilioAuthToken);
 
 router.get('/', async (req, res) => {
   try {
@@ -89,17 +94,38 @@ router.post('/', async (req, res) => {
       startTime,
       duration,
     } = req.body;
+    const contractor = await query(
+      'SELECT "phoneNumber" FROM contractors WHERE id = $1',
+      [contractorId]
+    );
+    if (!contractor.rows || !contractor.rows[0]) throw new Error(404);
     const userAppt = await query(
       `INSERT INTO appointments ("contractorId", "userId", "serviceId", "scheduleId", "startTime", duration) 
       VALUES ($1, $2, $3, $4, $5, $6) 
       RETURNING *`,
       [contractorId, req.user.id, serviceId, scheduleId, startTime, duration]
     );
+    const contractorPhoneNumber = contractor.rows[0].phoneNumber;
+    twilioClient.messages
+      .create({
+        to: contractorPhoneNumber,
+        from: '+17323297090',
+        body: 'A client has booked an appointment! Please log in to confirm.',
+      })
+      .then(message => console.log(message))
+      .catch(err => console.log('ERROR: ', err));
     return res.json({ created: userAppt.rows[0] });
   } catch (err) {
-    return res
-      .status(500)
-      .json({ error: 'There was an error while creating appointment.' });
+    switch (err.message) {
+      case '404':
+        return res
+          .status(404)
+          .json({ error: 'No contractor found with that ID.' });
+      default:
+        return res
+          .status(500)
+          .json({ error: 'There was an error while creating appointment.' });
+    }
   }
 });
 
