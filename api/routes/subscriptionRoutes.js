@@ -71,12 +71,9 @@ router.post('/', async (req, res) => {
         token: token.id,
         owner,
       });
-      const added = await stripe.customers.createSource(
-        existing.rows[0].customerId,
-        {
-          source: source.id,
-        }
-      );
+      await stripe.customers.createSource(existing.rows[0].customerId, {
+        source: source.id,
+      });
       const subscription = await stripe.subscriptions.create({
         customer: existing.rows[0].customerId,
         items: [{ plan: process.env.STRIPE_PLAN_ID_TEST }],
@@ -96,7 +93,7 @@ router.post('/', async (req, res) => {
         token: token.id,
         owner,
       });
-      const added = await stripe.customers.createSource(customer.id, {
+      await stripe.customers.createSource(customer.id, {
         source: source.id,
       });
       const subscription = await stripe.subscriptions.create({
@@ -149,12 +146,9 @@ router.delete('/', async (req, res) => {
       subscription.rows[0].subscriptionId === null
     )
       throw new Error(404);
-    const scheduleDelete = await stripe.subscriptions.update(
-      subscription.rows[0].subscriptionId,
-      {
-        cancel_at_period_end: true,
-      }
-    );
+    await stripe.subscriptions.update(subscription.rows[0].subscriptionId, {
+      cancel_at_period_end: true,
+    });
     return res.json({
       success: 'Subscription will not renew at end of current period.',
     });
@@ -185,9 +179,7 @@ router.delete('/immediate', async (req, res) => {
       subscription.rows[0].subscriptionId === null
     )
       throw new Error(404);
-    const scheduleDelete = await stripe.subscriptions.del(
-      subscription.rows[0].subscriptionId
-    );
+    await stripe.subscriptions.del(subscription.rows[0].subscriptionId);
     const setToNull = await query(
       `UPDATE stripe
       SET "subscriptionId" = NULL
@@ -237,12 +229,9 @@ router.put('/payment', async (req, res) => {
       token: token.id,
       owner,
     });
-    const added = await stripe.customers.createSource(
-      existing.rows[0].customerId,
-      {
-        source: source.id,
-      }
-    );
+    await stripe.customers.createSource(existing.rows[0].customerId, {
+      source: source.id,
+    });
     return res.json({ success: 'Payment source successfully changed.' });
   } catch (err) {
     switch (err.message) {

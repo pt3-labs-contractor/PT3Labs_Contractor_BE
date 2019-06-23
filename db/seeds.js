@@ -53,9 +53,7 @@ function contractorSeeds() {
             zips.push(zipCode);
             bingCalls.push(
               axios.get(
-                `https://dev.virtualearth.net/REST/v1/Locations?countryRegion=US&postalCode=${zipCode}&key=${
-                  process.env.BING_MAPS_KEY
-                }`
+                `https://dev.virtualearth.net/REST/v1/Locations?countryRegion=US&postalCode=${zipCode}&key=${process.env.BING_MAPS_KEY}`
               )
             );
             // eslint-disable-next-line no-param-reassign
