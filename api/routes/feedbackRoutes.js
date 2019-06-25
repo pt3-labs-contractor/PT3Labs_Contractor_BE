@@ -3,6 +3,23 @@ const { query } = require('../../db');
 
 const router = express.Router();
 
+router.get('/', async (req, res) => {
+  try {
+    const { user } = req;
+    const attribute = user.contractorId ? 'contractorId' : 'userId';
+    const value = user.contractorId || user.id;
+    const feedback = query(`SELECT * FROM feedback WHERE "${attribute}" = $1`, [
+      value,
+    ]);
+    if (!feedback.rows) throw new Error();
+    return res.json({ feedback: feedback.rows });
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ error: 'There was an error while retrieving feedback.' });
+  }
+});
+
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -20,7 +37,7 @@ router.post('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { stars, message } = req.body;
-    const userId = req.decoded.id;
+    const userId = req.user.id;
     if (!stars || !message) throw new Error(400);
     const feedback = await query(
       `INSERT INTO feedback ("userId", "contractorId", stars, message)

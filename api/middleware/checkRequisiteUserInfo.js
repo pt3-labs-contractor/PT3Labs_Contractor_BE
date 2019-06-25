@@ -3,7 +3,7 @@ const { query } = require('../../db');
 async function checkRequisiteUserInfo(req, res, next) {
   try {
     const user = await query('SELECT * FROM users WHERE id = $1;', [
-      req.decoded.id,
+      req.user.id,
     ]);
     if (!user.rows[0]) throw new Error();
     const { username, phoneNumber, email } = user.rows[0];

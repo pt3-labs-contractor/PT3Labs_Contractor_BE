@@ -5,24 +5,12 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const users = await query(
-      `SELECT id, username, "phoneNumber", email, "contractorId", "createdAt" FROM users
-      WHERE id = $1`,
-      [req.decoded.id]
-    );
-    if (!users.rows || !users.rows[0]) throw new Error(401);
-    return res.json({ user: users.rows[0] });
+    return res.json({ user: req.user });
   } catch (err) {
-    switch (err.message) {
-      case '401':
-        return res
-          .status(401)
-          .json({ error: 'Invalid credentials, please reauthenticate.' });
-      default:
-        return res
-          .status(500)
-          .json({ error: 'There was a problem while retrieving user info.' });
-    }
+      return res
+        .status(500)
+        .json({ error: 'There was a problem while retrieving user info.' });
+    
   }
 });
 
@@ -99,10 +87,10 @@ router.put('/', async (req, res) => {
     for (let i = 0; i < potentialKeys.length; i += 1) {
       if (potentialKeys[i][1]) {
         queries.push(
-          query(`UPDATE users SET "${potentialKeys[i][0]}" = $1 WHERE id = $2`, [
-            potentialKeys[i][1],
-            req.decoded.id,
-          ])
+          query(
+            `UPDATE users SET "${potentialKeys[i][0]}" = $1 WHERE id = $2`,
+            [potentialKeys[i][1], req.user.id]
+          )
         );
       }
     }
@@ -123,7 +111,7 @@ router.put('/', async (req, res) => {
     await Promise.all(promises);
     const updatedUser = await query(
       'SELECT id, username, "phoneNumber", email, "contractorId", "createdAt" FROM users WHERE id = $1',
-      [req.decoded.id]
+      [req.user.id]
     );
     return res.json({ user: updatedUser.rows[0] });
   } catch (err) {
@@ -156,19 +144,14 @@ router.put('/', async (req, res) => {
 // As a callback
 router.delete('/', async (req, res) => {
   try {
-    const { id } = req.decoded;
-    const user = await query(
-      'SELECT id, "googleId", "phoneNumber", email, "contractorId", "createdAt" FROM users WHERE id = $1;',
-      [id]
-    );
-    const { contractorId } = user.rows[0];
-    if (contractorId) {
+    const { user } = req;
+    if (user.contractorId) {
       // Delete will cascade to users table
-      await query(`DELETE FROM contractors WHERE id = $1`, [contractorId]);
+      await query(`DELETE FROM contractors WHERE id = $1`, [user.contractorId]);
     } else {
-      await query(`DELETE FROM users WHERE id = $1`, [user.rows[0].id]);
+      await query(`DELETE FROM users WHERE id = $1`, [user.id]);
     }
-    return res.json({ deleted: user.rows[0] });
+    return res.json({ deleted: user });
   } catch (err) {
     return res
       .status(500)

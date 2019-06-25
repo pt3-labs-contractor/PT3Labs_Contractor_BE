@@ -31,6 +31,7 @@ router.post('/register', async (req, res) => {
         RETURNING id;`,
         [contractorName, phoneNumber, streetAddress, city, stateAbbr, zipCode]
       );
+      if (/duplicate/i.test(contractor.message)) throw new Error('duplicate');
       user = await query(
         `INSERT INTO users (username, password, "phoneNumber", email, "contractorId")
         VALUES ($1, $2, $3, $4, $5)
@@ -46,12 +47,18 @@ router.post('/register', async (req, res) => {
         [username, hash, phoneNumber, email]
       );
     }
+    if (/duplicate/i.test(user.message)) throw new Error('duplicate');
     const token = jwt.sign({ id: user.rows[0].id }, process.env.JWT_SECRET, {
       expiresIn: '1d',
     });
     return res.status(201).json({ token });
   } catch (err) {
     switch (err.message) {
+      case 'duplicate':
+        return res.status(400).json({
+          error:
+            'One or more values provided already exists for registered user.  Please try again or login to existing account.',
+        });
       case '400':
         return res.status(400).json({
           error:
@@ -63,9 +70,7 @@ router.post('/register', async (req, res) => {
             'New contractor must include values for streetAddress, city, stateAbbr, and zipCode.',
         });
       default:
-        return res
-          .status(500)
-          .json({ error: 'There was a problem while registering.' });
+        return res.status(500).json({ error: err.message });
     }
   }
 });
@@ -104,9 +109,21 @@ router.get(
 );
 
 router.get('/google/redirect', passport.authenticate('google'), (req, res) => {
+  if (req.user.error) {
+    switch (req.user.error) {
+      case 'existing email':
+        return res.redirect(
+          'https://affectionate-almeida-c22cb1.netlify.com/redirect?existing=true'
+        );
+      default:
+        return res.redirect(
+          'https://affectionate-almeida-c22cb1.netlify.com/redirect?error=true'
+        );
+    }
+  }
   const registrationComplete =
     req.user.username && req.user.email && req.user.phoneNumber;
-  res.redirect(
+  return res.redirect(
     `https://affectionate-almeida-c22cb1.netlify.com/redirect?token=${
       req.user.token
     }${registrationComplete ? '&registrationComplete=true' : ''}`
