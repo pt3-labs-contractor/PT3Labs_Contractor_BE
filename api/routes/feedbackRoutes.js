@@ -93,7 +93,9 @@ router.post('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const check = await query('SELECT FROM feedback WHERE id = $1', [id]);
+    const check = await query('SELECT "userId" FROM feedback WHERE id = $1', [
+      id,
+    ]);
     if (!check.rows || !check.rows[0]) throw new Error(404);
     if (req.user.id !== check.rows[0].userId) throw new Error(403);
     const entry = await query(
