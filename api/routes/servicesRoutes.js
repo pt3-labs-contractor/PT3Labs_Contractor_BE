@@ -69,19 +69,23 @@ router.post('/', async (req, res) => {
   try {
     const { name, price } = req.body;
     if (!name) throw new Error(400);
-    const {user} = req;
+    const { user } = req;
     if (!user.contractorId) throw new Error(403);
     const values = [name, user.contractorId];
     if (price) values.push(price);
     const service = await query(
-      `INSERT INTO services (name, "contractorId"${price?', price':''}) VALUES ($1, $2${price?', $3':''}) RETURNING *`,
+      `INSERT INTO services (name, "contractorId"${
+        price ? ', price' : ''
+      }) VALUES ($1, $2${price ? ', $3' : ''}) RETURNING *`,
       values
     );
     return res.status(201).json({ created: service.rows[0] });
   } catch (err) {
     switch (err.message) {
       case '400':
-        return res.status(400).json({ error: 'Request must include value for "name" key.' });
+        return res
+          .status(400)
+          .json({ error: 'Request must include value for "name" key.' });
       case '403':
         return res
           .status(403)
@@ -98,7 +102,7 @@ router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { name, price } = req.body;
-    const {user} = req;
+    const { user } = req;
     if (!name || !price) throw new Error(400);
     const service = await query('SELECT * FROM services WHERE id = $1', [id]);
     if (!service.rows || !service.rows[0]) {
@@ -115,7 +119,12 @@ router.put('/:id', async (req, res) => {
   } catch (err) {
     switch (err.message) {
       case '400':
-        return res.status(400).json({ error: 'Request must include desired values for "name" or "price" key.' });
+        return res
+          .status(400)
+          .json({
+            error:
+              'Request must include desired values for "name" or "price" key.',
+          });
       case '403':
         return res.status(403).json({ error: 'Forbidden' });
       case '404':

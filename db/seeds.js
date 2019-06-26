@@ -1,5 +1,6 @@
 const { Pool } = require('pg');
 const faker = require('faker');
+const bcrypt = require('bcrypt');
 const axios = require('axios');
 require('dotenv').config();
 
@@ -52,9 +53,7 @@ function contractorSeeds() {
             zips.push(zipCode);
             bingCalls.push(
               axios.get(
-                `https://dev.virtualearth.net/REST/v1/Locations?countryRegion=US&postalCode=${zipCode}&key=${
-                  process.env.BING_MAPS_KEY
-                }`
+                `https://dev.virtualearth.net/REST/v1/Locations?countryRegion=US&postalCode=${zipCode}&key=${process.env.BING_MAPS_KEY}`
               )
             );
             // eslint-disable-next-line no-param-reassign
@@ -93,6 +92,22 @@ function contractorSeeds() {
         )
       );
     }
+    promises.push(
+      query(
+        `INSERT INTO contractors (name, "phoneNumber", "streetAddress", city, "stateAbbr", "zipCode", latitude, longitude)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8);`,
+        [
+          'Test Contractor',
+          '(555)867-5309',
+          '1 Test St.',
+          'Test City',
+          'TE',
+          '07065',
+          '40.6042',
+          '-74.2825',
+        ]
+      )
+    );
     await Promise.all(promises);
     resolve();
   });
@@ -101,26 +116,47 @@ function contractorSeeds() {
 function userSeeds() {
   return new Promise(async resolve => {
     const contractors = await query('SELECT * FROM contractors;');
+    const passwordHashes = [
+      bcrypt.hash('password', 12),
+      bcrypt.hash('password', 12),
+    ];
+    const passwords = await Promise.all(passwordHashes);
     const promises = [];
     for (let i = 0; i < contractors.rows.length; i += 1) {
-      const username = contractors.rows[i].name.replace(/\s/g, '') + i; // Add index, to be sure there are no repeating usernames
-      promises.push(
-        query(
-          `
+      if (contractors.rows[i].name === 'Test Contractor') {
+        promises.push(
+          query(
+            `INSERT INTO users (username, password, "phoneNumber", email, "contractorId")
+          VALUES ($1, $2, $3, $4, $5);`,
+            [
+              'Test Contractor',
+              passwords[0],
+              '(555)867-5309',
+              'testContractor@email.com',
+              contractors.rows[i].id,
+            ]
+          )
+        );
+      } else {
+        const username = contractors.rows[i].name.replace(/\s/g, '') + i; // Add index, to be sure there are no repeating usernames
+        promises.push(
+          query(
+            `
         INSERT INTO users ( "googleId", username, "phoneNumber", email, "contractorId")
         VALUES ($1, $2, $3, $4, $5);
       `,
-          [
-            Math.random()
-              .toString()
-              .slice(2),
-            username,
-            contractors.rows[i].phoneNumber,
-            faker.internet.email() + i,
-            contractors.rows[i].id,
-          ]
-        )
-      );
+            [
+              Math.random()
+                .toString()
+                .slice(2),
+              username,
+              contractors.rows[i].phoneNumber,
+              faker.internet.email() + i,
+              contractors.rows[i].id,
+            ]
+          )
+        );
+      }
     }
 
     for (let i = 0; i < 250; i += 1) {
@@ -142,6 +178,13 @@ function userSeeds() {
         )
       );
     }
+    promises.push(
+      query(
+        `INSERT INTO users (username, password, "phoneNumber", email, "contractorId")
+      VALUES ($1, $2, $3, $4, $5)`,
+        ['Test User', passwords[1], '(555)567-0192', 'testUser@email.com', null]
+      )
+    );
     await Promise.all(promises);
     resolve();
   });
