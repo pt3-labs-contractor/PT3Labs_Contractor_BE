@@ -11,7 +11,19 @@ router.get('/', async (req, res) => {
         'SELECT * FROM services WHERE "contractorId" = $1',
         [contractor.id]
       );
-      return { ...contractor, services: services.rows };
+      const score = await getAverageScore(contractor.id);
+      // let score = await query(
+      //   'SELECT stars FROM feedback WHERE "contractorId" = $1',
+      //   [contractor.id]
+      // );
+      // score = score.rows.reduce((acc, cur, index, arr) => {
+      //   acc += cur.stars;
+      //   if (index === arr.length - 1) {
+      //     acc /= arr.length;
+      //   }
+      //   return acc;
+      // }, 0);
+      return { ...contractor, services: services.rows, userScore: score };
     });
     const contractorsWithServices = await Promise.all(promises);
     return res.json({ contractors: contractorsWithServices });
@@ -48,8 +60,13 @@ router.get('/:id', async (req, res) => {
       'SELECT * FROM services WHERE "contractorId" = $1',
       [contractor.rows[0].id]
     );
+    const score = await getAverageScore(contractor.rows[0].id);
     return res.json({
-      contractor: { ...contractor.rows[0], services: services.rows },
+      contractor: {
+        ...contractor.rows[0],
+        services: services.rows,
+        userScore: score,
+      },
     });
   } catch (error) {
     switch (error.message) {
@@ -158,5 +175,20 @@ router.delete('/:id', async (req, res) => {
     }
   }
 });
+
+async function getAverageScore(id) {
+  let score = await query(
+    'SELECT stars FROM feedback WHERE "contractorId" = $1',
+    [id]
+  );
+  score = score.rows.reduce((acc, cur, index, arr) => {
+    acc += cur.stars;
+    if (index === arr.length - 1) {
+      acc /= arr.length;
+    }
+    return acc;
+  }, 0);
+  return score;
+}
 
 module.exports = router;
