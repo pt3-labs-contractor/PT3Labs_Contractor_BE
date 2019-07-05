@@ -186,7 +186,7 @@ async function getAverageScore(id) {
     if (index === arr.length - 1) {
       acc /= arr.length;
     }
-    return acc;
+    return Math.round(acc * 10) / 10;
   }, 0);
   return score;
 }
