@@ -3,6 +3,17 @@ const { query } = require('../../db');
 
 const router = express.Router();
 
+async function getAverageScore(id) {
+  const reviews = await query(
+    'SELECT stars FROM feedback WHERE "contractorId" = $1',
+    [id]
+  );
+  if (!reviews.rows) throw new Error(500);
+  const { length } = reviews.rows;
+  const sum = reviews.rows.reduce((a, b) => a + b.stars, 0);
+  return Math.round(10 * (sum / length)) / 10;
+}
+
 router.get('/', async (req, res) => {
   try {
     const contractors = await query('SELECT * FROM contractors;');
@@ -12,17 +23,6 @@ router.get('/', async (req, res) => {
         [contractor.id]
       );
       const score = await getAverageScore(contractor.id);
-      // let score = await query(
-      //   'SELECT stars FROM feedback WHERE "contractorId" = $1',
-      //   [contractor.id]
-      // );
-      // score = score.rows.reduce((acc, cur, index, arr) => {
-      //   acc += cur.stars;
-      //   if (index === arr.length - 1) {
-      //     acc /= arr.length;
-      //   }
-      //   return acc;
-      // }, 0);
       return { ...contractor, services: services.rows, userScore: score };
     });
     const contractorsWithServices = await Promise.all(promises);
@@ -31,21 +31,6 @@ router.get('/', async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 });
-
-// As a promise. please leave it as comment out
-// router.get('/', (req, res, next) => {
-//   query('SELECT * FROM contractors')
-//     .then(contractors => {
-//       res.status(200).json({
-//         status: 'success',
-//         contractors,
-//         message: 'Retrieved All contractors',
-//       });
-//     })
-//     .catch(err => {
-//       return next(err);
-//     });
-// });
 
 router.get('/:id', async (req, res) => {
   try {
@@ -175,20 +160,5 @@ router.delete('/:id', async (req, res) => {
     }
   }
 });
-
-async function getAverageScore(id) {
-  let score = await query(
-    'SELECT stars FROM feedback WHERE "contractorId" = $1',
-    [id]
-  );
-  score = score.rows.reduce((acc, cur, index, arr) => {
-    acc += cur.stars;
-    if (index === arr.length - 1) {
-      acc /= arr.length;
-    }
-    return Math.round(acc * 10) / 10;
-  }, 0);
-  return score;
-}
 
 module.exports = router;
