@@ -44,7 +44,12 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const feedback = await query(
-      'SELECT * FROM feedback WHERE "contractorId" = $1;',
+      `SELECT f.id, c.name as "contractorName", username, stars, message, f."createdAt", f."contractorId", f."userId" FROM feedback f 
+      JOIN contractors c 
+      ON f."contractorId" = c.id 
+      JOIN users u 
+      ON f."userId" = u.id 
+      WHERE f."contractorId" = $1;`,
       [id]
     );
     if (!feedback.rows) throw new Error();

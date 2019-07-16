@@ -15,7 +15,13 @@ router.get('/', async (req, res) => {
     const attribute = user.contractorId ? 'contractorId' : 'userId';
     const value = isContractor || user.id;
     const appointments = await query(
-      `SELECT * FROM appointments WHERE "${attribute}" = $1`, // attribute will only ever be defined by server, no risk of injection.
+      `SELECT a.id, username, c.name as "contractorName", a."contractorId",a."userId", a."startTime", duration, confirmed, a."createdAt" 
+      FROM appointments a 
+      JOIN contractors c
+      ON c.id = a."contractorId"
+      JOIN users u
+      ON u.id = a."userId"
+      WHERE a."${attribute}" = $1`, // attribute will only ever be defined by server, no risk of injection.
       [value]
     );
     return res.json({ appointments: appointments.rows });
