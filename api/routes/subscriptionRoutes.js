@@ -25,7 +25,7 @@ router.get('/', async (req, res) => {
     const customer = await stripe.customers.retrieve(entry.rows[0].customerId);
     const subscription = customer.subscriptions.data.filter(
       sub => sub.id === entry.rows[0].subscriptionId
-    );
+    )[0];
     const paymentMethod = customer.sources.data.filter(
       src => src.id === customer.default_source
     )[0];
