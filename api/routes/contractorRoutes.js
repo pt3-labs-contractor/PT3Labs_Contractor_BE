@@ -3,6 +3,17 @@ const { query } = require('../../db');
 
 const router = express.Router();
 
+async function getAverageScore(id) {
+  const reviews = await query(
+    'SELECT stars FROM feedback WHERE "contractorId" = $1',
+    [id]
+  );
+  if (!reviews.rows) throw new Error(500);
+  const sum = reviews.rows.reduce((a, b) => a + b.stars, 0);
+  const avg = sum / reviews.rows.length;
+  return Math.round((avg * 10) / 10);
+}
+
 router.get('/', async (req, res) => {
   try {
     const contractors = await query('SELECT * FROM contractors;');
@@ -164,20 +175,5 @@ router.delete('/:id', async (req, res) => {
     }
   }
 });
-
-async function getAverageScore(id) {
-  let score = await query(
-    'SELECT stars FROM feedback WHERE "contractorId" = $1',
-    [id]
-  );
-  score = score.rows.reduce((acc, cur, index, arr) => {
-    acc += cur.stars;
-    if (index === arr.length - 1) {
-      acc /= arr.length;
-    }
-    return Math.round(acc * 10) / 10;
-  }, 0);
-  return score;
-}
 
 module.exports = router;
