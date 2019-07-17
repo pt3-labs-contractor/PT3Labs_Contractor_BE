@@ -9,7 +9,15 @@ async function authenticate(req, res, next) {
     if (!user.rows || !user.rows[0]) {
       throw new Error();
     }
+    const subscription = await query(
+      'SELECT * FROM stripe WHERE "userId" = $1',
+      [decoded.id]
+    );
+    if (!subscription.rows) throw new Error();
     const { password, ...withoutPassword } = user.rows[0];
+    withoutPassword.subscriptionId = subscription.rows[0]
+      ? subscription.rows[0].subscriptionId
+      : null;
     req.user = withoutPassword;
     next();
   } catch (err) {
