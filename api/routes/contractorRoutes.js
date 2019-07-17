@@ -12,17 +12,6 @@ router.get('/', async (req, res) => {
         [contractor.id]
       );
       const score = await getAverageScore(contractor.id);
-      // let score = await query(
-      //   'SELECT stars FROM feedback WHERE "contractorId" = $1',
-      //   [contractor.id]
-      // );
-      // score = score.rows.reduce((acc, cur, index, arr) => {
-      //   acc += cur.stars;
-      //   if (index === arr.length - 1) {
-      //     acc /= arr.length;
-      //   }
-      //   return acc;
-      // }, 0);
       return { ...contractor, services: services.rows, userScore: score };
     });
     const contractorsWithServices = await Promise.all(promises);
