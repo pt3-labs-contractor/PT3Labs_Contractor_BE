@@ -73,11 +73,7 @@ router.post('/:id', async (req, res) => {
       [userId, id, stars, message]
 
     );
-<<<<<<< HEAD
-    console.log(feedback)
-=======
     if (!feedback.rows || !feedback.rows[0]) throw new Error();
->>>>>>> 8806d2980fa735629864ca18d45384c7ecb654ce
     return res.status(201).json({ feedback: feedback.rows[0] });
   } catch (err) {
     switch (err.message) {
