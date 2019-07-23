@@ -9,9 +9,9 @@ async function getAverageScore(id) {
     [id]
   );
   if (!reviews.rows) throw new Error(500);
-  const { length } = reviews.rows;
   const sum = reviews.rows.reduce((a, b) => a + b.stars, 0);
-  return Math.round(10 * (sum / length)) / 10;
+  const avg = sum / reviews.rows.length;
+  return Math.round((avg * 10) / 10);
 }
 
 router.get('/', async (req, res) => {

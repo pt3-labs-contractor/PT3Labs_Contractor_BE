@@ -22,10 +22,14 @@ router.get('/', async (req, res) => {
     ]);
     if (!entry.rows || !entry.rows[0] || !entry.rows[0].subscriptionId)
       throw new Error(404);
-    const subscription = await stripe.subscriptions.retrieve(
-      entry.rows[0].subscriptionId
-    );
-    return res.json({ subscription });
+    const customer = await stripe.customers.retrieve(entry.rows[0].customerId);
+    const subscription = customer.subscriptions.data.filter(
+      sub => sub.id === entry.rows[0].subscriptionId
+    )[0];
+    const paymentMethod = customer.sources.data.filter(
+      src => src.id === customer.default_source
+    )[0];
+    return res.json({ subscription: { ...subscription, paymentMethod } });
   } catch (error) {
     switch (error.message) {
       case '404':

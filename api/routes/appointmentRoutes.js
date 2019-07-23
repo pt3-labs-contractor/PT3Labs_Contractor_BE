@@ -59,7 +59,7 @@ router.get('/contractors/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const appointments = await query(
-      `SELECT a.id, a."contractorId", a."userId", a."serviceId", c.name as "contractorName", username, s.name as service, price, a."startTime", confirmed, duration, a."createdAt"  
+      `SELECT a.id, a."contractorId", a."userId", a."serviceId", "scheduleId", c.name as "contractorName", username, s.name as service, price, a."startTime", confirmed, duration, a."createdAt"  
       FROM appointments a
       JOIN users u
       ON u.id = a."userId"

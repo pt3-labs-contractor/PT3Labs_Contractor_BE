@@ -25,7 +25,6 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api', authenticate);
 app.use('/api/users', userRoutes);
-// app.use('/api', checkRequisiteUserInfo);
 app.use('/api/contractors', contractorRoutes);
 app.use('/api/schedules', schedulesRoutes);
 app.use('/api/services', servicesRoutes);
