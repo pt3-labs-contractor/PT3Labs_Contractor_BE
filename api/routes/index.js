@@ -6,6 +6,7 @@ const appointmentRoutes = require('./appointmentRoutes');
 const servicesRoutes = require('./servicesRoutes');
 const feedbackRoutes = require('./feedbackRoutes');
 const subscriptionRoutes = require('./subscriptionRoutes');
+const cloudinaryRoutes = require('./cloudinaryRoute');
 
 module.exports = {
   contractorRoutes,
@@ -16,4 +17,5 @@ module.exports = {
   servicesRoutes,
   feedbackRoutes,
   subscriptionRoutes,
+  cloudinaryRoutes,
 };

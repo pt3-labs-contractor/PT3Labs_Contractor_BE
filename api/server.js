@@ -12,6 +12,7 @@ const {
   servicesRoutes,
   feedbackRoutes,
   subscriptionRoutes,
+  cloudinaryRoutes,
 } = require('./routes');
 const { authenticate } = require('./middleware');
 require('../config/passport-setup');
@@ -31,5 +32,6 @@ app.use('/api/services', servicesRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/subscription', subscriptionRoutes);
+app.use('/api/cloudinary', cloudinaryRoutes);
 
 module.exports = app;

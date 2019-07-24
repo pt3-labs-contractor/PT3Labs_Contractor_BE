@@ -24,6 +24,7 @@
   "dependencies": {
     "axios": "^0.18.0",
     "bcrypt": "^3.0.6",
+    "cloudinary": "^1.14.0",
     "concurrently": "^4.1.0",
     "connect-redis": "^3.4.1",
     "cors": "^2.8.5",
