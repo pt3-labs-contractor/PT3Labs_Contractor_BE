@@ -162,7 +162,7 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-router.get('/zip/:zip', async (req, res) => {
+router.post('/zip/:zip', async (req, res) => {
   async function sortByDistance(zip, contractors, limit) {
     function isCenterOfUS(lat, long) {
       return (
