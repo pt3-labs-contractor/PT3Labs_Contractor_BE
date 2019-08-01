@@ -233,10 +233,20 @@ router.put('/payment', async (req, res) => {
       token: token.id,
       owner,
     });
-    await stripe.customers.createSource(existing.rows[0].customerId, {
+    await stripe.customers.update(existing.rows[0].customerId, {
       source: source.id,
     });
-    return res.json({ success: 'Payment source successfully changed.' });
+    // Retrieve Customer information and pull subscription info
+    const customer = await stripe.customers.retrieve(
+      existing.rows[0].customerId
+    );
+    const subscription = customer.subscriptions.data.filter(
+      sub => sub.id === existing.rows[0].subscriptionId
+    )[0];
+    const paymentMethod = customer.sources.data.filter(
+      src => src.id === customer.default_source
+    )[0];
+    return res.json({ subscription: { ...subscription, paymentMethod } });
   } catch (err) {
     switch (err.message) {
       case '400':
