@@ -205,7 +205,7 @@ function scheduleSeeds() {
             `,
             [
               contractors.rows[i].id,
-              faker.date.between('2019-7-1', '2019-7-31'),
+              faker.date.between('2019-8-1', '2019-8-31'),
               `${faker.random.number({ min: 2, max: 5 })}h`,
             ]
           )
