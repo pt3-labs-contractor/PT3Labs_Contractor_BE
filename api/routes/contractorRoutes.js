@@ -190,7 +190,7 @@ router.get('/zip/:zip', async (req, res) => {
       return R * c;
     }
     const response = await axios.get(
-      `https://dev.virtualearth.net/REST/v1/Locations?countryRegion=US&postalCode=${zip}&key=${process.env.REACT_APP_BING_MAPS_KEY}`
+      `https://dev.virtualearth.net/REST/v1/Locations?countryRegion=US&postalCode=${zip}&key=${process.env.BING_MAPS_KEY}`
     );
     if (!response.data.resourceSets[0].resources.length) return null;
     const [
