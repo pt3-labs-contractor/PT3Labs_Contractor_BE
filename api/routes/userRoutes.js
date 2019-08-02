@@ -50,12 +50,13 @@ router.put('/', async (req, res) => {
     return queries;
   }
   try {
-    const { username, password, email, phoneNumber } = req.body;
+    const { username, password, email, phoneNumber, contractorId } = req.body;
     const potentialKeys = Object.entries({
       username,
       password,
       email,
       phoneNumber,
+      contractorId,
     });
     if (potentialKeys.every(key => !key[1])) {
       throw new Error(400);
