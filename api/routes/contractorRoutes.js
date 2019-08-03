@@ -3,6 +3,17 @@ const { query } = require('../../db');
 
 const router = express.Router();
 
+async function getAverageScore(id) {
+  const reviews = await query(
+    'SELECT stars FROM feedback WHERE "contractorId" = $1',
+    [id]
+  );
+  if (!reviews.rows) throw new Error(500);
+  const sum = reviews.rows.reduce((a, b) => a + b.stars, 0);
+  const avg = sum / reviews.rows.length;
+  return Math.round((avg * 10) / 10);
+}
+
 router.get('/', async (req, res) => {
   try {
     const contractors = await query('SELECT * FROM contractors;');
@@ -11,7 +22,8 @@ router.get('/', async (req, res) => {
         'SELECT * FROM services WHERE "contractorId" = $1',
         [contractor.id]
       );
-      return { ...contractor, services: services.rows };
+      const score = await getAverageScore(contractor.id);
+      return { ...contractor, services: services.rows, userScore: score };
     });
     const contractorsWithServices = await Promise.all(promises);
     return res.json({ contractors: contractorsWithServices });
@@ -19,21 +31,6 @@ router.get('/', async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 });
-
-// As a promise. please leave it as comment out
-// router.get('/', (req, res, next) => {
-//   query('SELECT * FROM contractors')
-//     .then(contractors => {
-//       res.status(200).json({
-//         status: 'success',
-//         contractors,
-//         message: 'Retrieved All contractors',
-//       });
-//     })
-//     .catch(err => {
-//       return next(err);
-//     });
-// });
 
 router.get('/:id', async (req, res) => {
   try {
@@ -48,8 +45,13 @@ router.get('/:id', async (req, res) => {
       'SELECT * FROM services WHERE "contractorId" = $1',
       [contractor.rows[0].id]
     );
+    const score = await getAverageScore(contractor.rows[0].id);
     return res.json({
-      contractor: { ...contractor.rows[0], services: services.rows },
+      contractor: {
+        ...contractor.rows[0],
+        services: services.rows,
+        userScore: score,
+      },
     });
   } catch (error) {
     switch (error.message) {

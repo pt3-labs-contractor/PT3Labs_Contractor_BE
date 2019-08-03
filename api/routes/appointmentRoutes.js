@@ -1,7 +1,12 @@
 const express = require('express');
+const Twilio = require('twilio');
 const { query } = require('../../db');
 
 const router = express.Router();
+
+const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID;
+const twilioAuthToken = process.env.TWILIO_ACCOUNT_TOKEN;
+const twilioClient = new Twilio(twilioAccountSid, twilioAuthToken);
 
 router.get('/', async (req, res) => {
   try {
@@ -10,7 +15,15 @@ router.get('/', async (req, res) => {
     const attribute = user.contractorId ? 'contractorId' : 'userId';
     const value = isContractor || user.id;
     const appointments = await query(
-      `SELECT * FROM appointments WHERE "${attribute}" = $1`, // attribute will only ever be defined by server, no risk of injection.
+      `SELECT a.id, username, c.name as "contractorName", a."contractorId", a."userId", a."serviceId", a."scheduleId", s.name as service, price, a."startTime", duration, confirmed, a."createdAt" 
+      FROM appointments a 
+      JOIN contractors c
+      ON c.id = a."contractorId"
+      JOIN users u
+      ON u.id = a."userId"
+      JOIN services s
+      ON s.id = a."serviceId"
+      WHERE a."${attribute}" = $1`, // attribute will only ever be defined by server, no risk of injection.
       [value]
     );
     return res.json({ appointments: appointments.rows });
@@ -46,7 +59,15 @@ router.get('/contractors/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const appointments = await query(
-      'SELECT * FROM appointments WHERE contractorId = $1',
+      `SELECT a.id, a."contractorId", a."userId", a."serviceId", a."scheduleId", c.name as "contractorName", username, s.name as service, price, a."startTime", confirmed, duration, a."createdAt"  
+      FROM appointments a
+      JOIN users u
+      ON u.id = a."userId"
+      JOIN contractors c
+      ON c.id = a."contractorId"
+      JOIN services s
+      ON s.id = a."serviceId"
+      WHERE a."contractorId" = $1`,
       [id]
     );
     if (!appointments.rows) throw new Error();
@@ -80,8 +101,6 @@ router.get('/users/:id', async (req, res) => {
   }
 });
 
-// User, contractor, or both allowed to add/edit/delete?  Likely need permission from both.  For now, build either.
-
 router.post('/', async (req, res) => {
   try {
     const {
@@ -91,17 +110,38 @@ router.post('/', async (req, res) => {
       startTime,
       duration,
     } = req.body;
+    const contractor = await query(
+      'SELECT "phoneNumber" FROM contractors WHERE id = $1',
+      [contractorId]
+    );
+    if (!contractor.rows || !contractor.rows[0]) throw new Error(404);
     const userAppt = await query(
       `INSERT INTO appointments ("contractorId", "userId", "serviceId", "scheduleId", "startTime", duration) 
       VALUES ($1, $2, $3, $4, $5, $6) 
       RETURNING *`,
       [contractorId, req.user.id, serviceId, scheduleId, startTime, duration]
     );
+    const contractorPhoneNumber = contractor.rows[0].phoneNumber;
+    twilioClient.messages
+      .create({
+        to: contractorPhoneNumber,
+        from: '+17323297090',
+        body: 'A client has booked an appointment! Please log in to confirm.',
+      })
+      .then(message => console.log(message))
+      .catch(err => console.log('ERROR: ', err));
     return res.json({ created: userAppt.rows[0] });
   } catch (err) {
-    return res
-      .status(500)
-      .json({ error: 'There was an error while creating appointment.' });
+    switch (err.message) {
+      case '404':
+        return res
+          .status(404)
+          .json({ error: 'No contractor found with that ID.' });
+      default:
+        return res
+          .status(500)
+          .json({ error: 'There was an error while creating appointment.' });
+    }
   }
 });
 
@@ -175,7 +215,7 @@ router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { user } = req;
-    const { startTime, duration } = req.body;
+    const { startTime, duration, confirmed } = req.body;
     const appt = await query('SELECT * FROM appointments WHERE id = $1', [id]);
     if (!appt.rows || !appt.rows[0]) throw new Error(404);
     if (
@@ -184,8 +224,8 @@ router.put('/:id', async (req, res) => {
     )
       throw new Error(403);
     const userAppt = await query(
-      'UPDATE appointments SET "startTime" = $1, duration = $2 WHERE id = $3 RETURNING *',
-      [startTime, duration, id]
+      'UPDATE appointments SET "startTime" = $1, duration = $2, confirmed = $3 WHERE id = $4 RETURNING *',
+      [startTime, duration, confirmed, id]
     );
     return res.json({ updated: userAppt.rows[0] });
   } catch (err) {

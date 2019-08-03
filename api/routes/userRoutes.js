@@ -7,20 +7,11 @@ router.get('/', async (req, res) => {
   try {
     return res.json({ user: req.user });
   } catch (err) {
-      return res
-        .status(500)
-        .json({ error: 'There was a problem while retrieving user info.' });
-    
+    return res
+      .status(500)
+      .json({ error: 'There was a problem while retrieving user info.' });
   }
 });
-
-// get user by id as a callback
-// Save just in case we need to use it
-// router.get('/:id', async (req, res) => {
-//   const { id } = req.params;
-//   const user = await query('SELECT * FROM users where id= $1', [id]);
-//   res.json({ user: user.rows[0] });
-// });
 
 router.get('/:id', async (req, res) => {
   try {
@@ -42,44 +33,6 @@ router.get('/:id', async (req, res) => {
     }
   }
 });
-
-// Post as a callback function
-
-// router.post('/', (req, res) => {
-//   const { googleId, username, phoneNumber, email, contractorId } = req.body;
-
-//   query(
-//     'INSERT INTO users (googleId, username, phoneNumber, email, contractorId) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-//     [googleId, username, phoneNumber, email, contractorId],
-//     (error, result) => {
-//       if (error) {
-//         throw error;
-//       }
-//       res.status(201).send(`user added with ID: ${result.rows[0].id}`);
-//     }
-//   );
-// });
-
-// POST operation not needed, as adding users is handled through OAuth
-// process or /api/auth/register, see authRoutes.
-
-// router.post('/', async (req, res) => {
-//   try {
-//     const user = await query(
-//       'INSERT INTO users (googleId, username, phoneNumber, email, contractorId) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-//       [
-//         req.body.googleId,
-//         req.body.username,
-//         req.body.phoneNumber,
-//         req.body.email,
-//         req.body.contractorId,
-//       ]
-//     );
-//     return res.json(user.rows[0]);
-//   } catch (err) {
-//     return err;
-//   }
-// });
 
 router.put('/', async (req, res) => {
   function constructQueries(potentialKeys) {
@@ -129,19 +82,6 @@ router.put('/', async (req, res) => {
   }
 });
 
-// Async/await. use this endpoint if the one below isnt working
-// router.delete('/:id', async (req, res) => {
-//   try {
-//     const user = await query('DELETE FROM users WHERE id = $1', [
-//       req.params.id,
-//     ]);
-//     return res.json({ message: `${user} deleted` });
-//   } catch (err) {
-//     return err;
-//   }
-// });
-
-// As a callback
 router.delete('/', async (req, res) => {
   try {
     const { user } = req;

@@ -11,8 +11,9 @@ const {
   appointmentRoutes,
   servicesRoutes,
   feedbackRoutes,
+  subscriptionRoutes,
 } = require('./routes');
-const { authenticate, checkRequisiteUserInfo } = require('./middleware');
+const { authenticate } = require('./middleware');
 require('../config/passport-setup');
 
 const app = express();
@@ -24,11 +25,11 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api', authenticate);
 app.use('/api/users', userRoutes);
-// app.use('/api', checkRequisiteUserInfo);
 app.use('/api/contractors', contractorRoutes);
 app.use('/api/schedules', schedulesRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/feedback', feedbackRoutes);
+app.use('/api/subscription', subscriptionRoutes);
 
 module.exports = app;
