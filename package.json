@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/pt3-labs-contractor/PT3Labs_Contractor_BE#readme",
   "dependencies": {
-    "axios": "^0.18.0",
+    "axios": "^0.21.1",
     "bcrypt": "^3.0.6",
     "concurrently": "^4.1.0",
     "connect-redis": "^3.4.1",
